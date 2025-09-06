@@ -1,0 +1,44 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # Weekly on Monday
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Update Python dependencies
+      working-directory: ./backend
+      run: |
+        pip install pip-tools
+        pip-compile requirements.in --output-file requirements.txt
+        pip-compile requirements-dev.in --output-file requirements-dev.txt
+    
+    - name: Update Node.js dependencies
+      working-directory: ./frontend
+      run: |
+        npm update
+        npm audit fix --force
+    
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: 'chore: update dependencies'
+        title: 'Automated dependency updates'
+        body: |
+          This PR contains automated dependency updates.
+          
+          ## Changes
+          - Updated Python dependencies
+          - Updated Node.js dependencies
+          - Fixed security vulnerabilities
+          
+          Please review and merge if tests pass.
+        branch: dependency-updates
+        delete-branch: true
