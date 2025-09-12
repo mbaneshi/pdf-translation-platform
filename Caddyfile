@@ -28,7 +28,7 @@ pdf.edcopo.info {
     route {
         # API routes - proxy to FastAPI backend
         handle /api/* {
-            reverse_proxy backend:8000 {
+            reverse_proxy bk:8000 {
                 header_up Host {host}
                 header_up X-Real-IP {remote}
                 header_up X-Forwarded-For {remote}
@@ -38,7 +38,7 @@ pdf.edcopo.info {
 
         # Admin panel - proxy to Celery Flower
         handle /admin/* {
-            reverse_proxy flower:5555 {
+            reverse_proxy fl:5555 {
                 header_up Host {host}
                 header_up X-Real-IP {remote}
                 header_up X-Forwarded-For {remote}
@@ -54,7 +54,7 @@ pdf.edcopo.info {
 
         # Frontend - proxy to Next.js
         handle {
-            reverse_proxy frontend:3000 {
+            reverse_proxy fr:3000 {
                 header_up Host {host}
                 header_up X-Real-IP {remote}
                 header_up X-Forwarded-For {remote}
@@ -111,7 +111,7 @@ apipdf.edcopo.info {
     }
 
     # Proxy to FastAPI backend
-    reverse_proxy backend:8000 {
+    reverse_proxy bk:8000 {
         header_up Host {host}
         header_up X-Real-IP {remote}
         header_up X-Forwarded-For {remote}
@@ -145,7 +145,7 @@ adminpdf.edcopo.info {
     }
 
     # Proxy to Celery Flower
-    reverse_proxy flower:5555 {
+    reverse_proxy fl:5555 {
         header_up Host {host}
         header_up X-Real-IP {remote}
         header_up X-Forwarded-For {remote}
@@ -172,7 +172,7 @@ docspdf.edcopo.info {
     }
 
     # Serve API documentation
-    reverse_proxy backend:8000 {
+    reverse_proxy bk:8000 {
         header_up Host {host}
         header_up X-Real-IP {remote}
         header_up X-Forwarded-For {remote}

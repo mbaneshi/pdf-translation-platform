@@ -5,12 +5,12 @@ import os
 import uuid
 from datetime import datetime
 
-from core.database import get_db
-from core.config import settings
-from models import PDFDocument, PDFPage
-from services.pdf_service import PDFService
-from services.translation_service import TranslationService
-from workers.celery_worker import process_document_translation
+from app.core.database import get_db
+from app.core.config import settings
+from app.models import PDFDocument, PDFPage
+from app.services.pdf_service import PDFService
+from app.services.translation_service import TranslationService
+from app.workers.celery_worker import process_document_translation
 import aiofiles
 
 router = APIRouter()

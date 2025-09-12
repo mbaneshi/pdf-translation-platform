@@ -116,7 +116,7 @@ class PDFPage(Base):
     
     # Relationships
     document = relationship("PDFDocument", back_populates="pages")
-    semantic_structures = relationship("SemanticStructure", back_populates="page", cascade="all, delete-orphan")
+    semantic_structures = relationship("SemanticStructure", back_populates="page", cascade="all, delete-orphan", primaryjoin="PDFPage.id == SemanticStructure.page_id")
     sample_translations = relationship("SampleTranslation", back_populates="page", cascade="all, delete-orphan")
     format_preservation = relationship("FormatPreservation", back_populates="page", cascade="all, delete-orphan")
 
