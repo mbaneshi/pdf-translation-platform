@@ -1,0 +1,209 @@
+# Caddyfile for PDF Translation Platform
+# Production configuration for edcopo.info
+
+# Main application - Frontend + API
+pdf.edcopo.info {
+    # Enable HTTPS with automatic Let's Encrypt certificates
+    tls {
+        # Caddy will automatically get certificates from Let's Encrypt
+        # No additional configuration needed for production
+    }
+
+    # Logging
+    log {
+        output file /var/log/caddy/pdf.log
+        format json
+    }
+
+    # Rate limiting for API endpoints
+    rate_limit {
+        zone static {
+            key {remote_host}
+            events 100
+            window 1m
+        }
+    }
+
+    # Main application routing
+    route {
+        # API routes - proxy to FastAPI backend
+        handle /api/* {
+            reverse_proxy backend:8000 {
+                header_up Host {host}
+                header_up X-Real-IP {remote}
+                header_up X-Forwarded-For {remote}
+                header_up X-Forwarded-Proto {scheme}
+            }
+        }
+
+        # Admin panel - proxy to Celery Flower
+        handle /admin/* {
+            reverse_proxy flower:5555 {
+                header_up Host {host}
+                header_up X-Real-IP {remote}
+                header_up X-Forwarded-For {remote}
+                header_up X-Forwarded-Proto {scheme}
+            }
+        }
+
+        # Static files and uploads
+        handle /uploads/* {
+            root * /var/www/uploads
+            file_server
+        }
+
+        # Frontend - proxy to Next.js
+        handle {
+            reverse_proxy frontend:3000 {
+                header_up Host {host}
+                header_up X-Real-IP {remote}
+                header_up X-Forwarded-For {remote}
+                header_up X-Forwarded-Proto {scheme}
+            }
+        }
+    }
+
+    # Security headers
+    header {
+        # Security headers
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # CORS headers for API
+        Access-Control-Allow-Origin "https://pdf.edcopo.info"
+        Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+        Access-Control-Allow-Headers "Content-Type, Authorization"
+    }
+
+    # Handle preflight requests
+    @options {
+        method OPTIONS
+    }
+    handle @options {
+        header Access-Control-Allow-Origin "https://pdf.edcopo.info"
+        header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+        header Access-Control-Allow-Headers "Content-Type, Authorization"
+        respond 200
+    }
+}
+
+# API-only subdomain (optional)
+apipdf.edcopo.info {
+    tls {
+        # Automatic Let's Encrypt certificates
+    }
+
+    log {
+        output file /var/log/caddy/api.log
+        format json
+    }
+
+    # Rate limiting for API
+    rate_limit {
+        zone api {
+            key {remote_host}
+            events 200
+            window 1m
+        }
+    }
+
+    # Proxy to FastAPI backend
+    reverse_proxy backend:8000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # API-specific headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        Access-Control-Allow-Origin "*"
+        Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+        Access-Control-Allow-Headers "Content-Type, Authorization"
+    }
+}
+
+# Admin panel subdomain
+adminpdf.edcopo.info {
+    tls {
+        # Automatic Let's Encrypt certificates
+    }
+
+    log {
+        output file /var/log/caddy/admin.log
+        format json
+    }
+
+    # Basic authentication for admin access
+    basicauth {
+        admin $2a$14$your_hashed_password_here
+    }
+
+    # Proxy to Celery Flower
+    reverse_proxy flower:5555 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Admin-specific headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+    }
+}
+
+# Documentation subdomain
+docspdf.edcopo.info {
+    tls {
+        # Automatic Let's Encrypt certificates
+    }
+
+    log {
+        output file /var/log/caddy/docs.log
+        format json
+    }
+
+    # Serve API documentation
+    reverse_proxy backend:8000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Redirect /docs to /docs/
+    redir /docs /docs/ 301
+
+    # Documentation headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        Cache-Control "public, max-age=3600"
+    }
+}
+
+# Global configuration
+{
+    # Global options
+    auto_https off
+    servers {
+        metrics
+    }
+    
+    # Email for Let's Encrypt notifications
+    email your-email@edcopo.info
+    
+    # Logging
+    log {
+        level INFO
+        format json
+    }
+}
