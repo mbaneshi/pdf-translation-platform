@@ -1,33 +1,25 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*"],
-      "@/components/*": ["./components/*"],
-      "@/lib/*": ["./lib/*"],
-      "@/types/*": ["./types/*"],
-      "@/utils/*": ["./utils/*"],
-      "@/hooks/*": ["./hooks/*"],
-      "@/tests/*": ["./tests/*"],
-      "@/pages/*": ["./pages/*"]
-    },
-    "typeRoots": ["./node_modules/@types", "./types"],
     "types": ["jest", "@testing-library/jest-dom", "node"],
-    "jsx": "react-jsx",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "strict": false,
-    "skipLibCheck": true
+    "jsx": "react-jsx",
+    "module": "commonjs",
+    "target": "es2020",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "noEmit": true
   },
   "include": [
+    "**/*.ts",
+    "**/*.tsx",
     "tests/**/*.ts",
-    "tests/**/*.tsx",
-    "types/**/*.d.ts"
+    "tests/**/*.tsx"
   ],
   "exclude": [
     "node_modules",
-    ".next",
-    "out"
+    ".next"
   ]
 }

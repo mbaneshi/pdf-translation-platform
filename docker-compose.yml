@@ -1,22 +1,33 @@
+name: pdftr
+
 services:
+  # PostgreSQL Database with Enhanced Configuration
   db:
-    image: postgres:13-alpine
-    container_name: db
+    image: postgres:15-alpine
     environment:
-      POSTGRES_DB: pdf_translate
+      POSTGRES_DB: pdftr
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d pdf_translate"]
+      test: ["CMD-SHELL", "pg_isready -U user -d pdftr"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - pdftr_default
+    restart: unless-stopped
 
-  rd:
+  # Redis Cache and Message Broker
+  cache:
     image: redis:7-alpine
-    container_name: rd
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -24,60 +35,104 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - pdftr_default
+    restart: unless-stopped
 
-  bk:
+  # FastAPI Backend
+  api:
     build: ./backend
-    container_name: bk
+    ports:
+      - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://user:password@db/pdf_translate
-      - REDIS_URL=redis://rd:6379/0
+      - DATABASE_URL=postgresql://user:password@db/pdftr
+      - REDIS_URL=redis://cache:6379/0
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - CORS_ORIGINS=https://pdf.edcopo.info,https://apipdf.edcopo.info
     depends_on:
       db:
         condition: service_healthy
-      rd:
+      cache:
         condition: service_healthy
     volumes:
       - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    networks:
+      - pdftr_default
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  cw:
-    build: ./backend
-    container_name: cw
-    command: celery -A app.workers.celery_worker.celery_app worker --loglevel=info
+  # Next.js Frontend
+  web:
+    build: 
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: https://apipdf.edcopo.info
+        NEXT_PUBLIC_APP_URL: https://pdf.edcopo.info
+    ports:
+      - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://user:password@db/pdf_translate
-      - REDIS_URL=redis://rd:6379/0
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - NODE_ENV=production
+      # Both browser and server-side use dedicated API subdomain through Caddy
+      - NEXT_PUBLIC_API_URL=https://apipdf.edcopo.info
+      - NEXT_PUBLIC_APP_URL=https://pdf.edcopo.info
     depends_on:
-      - bk
-      - rd
+      - api
+    networks:
+      - pdftr_default
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Celery Worker for Background Tasks
+  worker:
+    build: ./backend
+    command: celery -A app.workers.celery_worker.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      - DATABASE_URL=postgresql://user:password@db/pdftr
+      - REDIS_URL=redis://cache:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ENVIRONMENT=production
+    depends_on:
+      - api
+      - cache
     volumes:
       - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    networks:
+      - pdftr_default
     restart: unless-stopped
+    deploy:
+      replicas: 2
 
-  fl:
+  # Celery Flower for Monitoring
+  monitor:
     build: ./backend
-    container_name: fl
-    command: celery -A app.workers.celery_worker.celery_app flower --port=5555
+    command: celery -A app.workers.celery_worker.celery_app flower --port=5555 --broker=redis://cache:6379/0
+    ports:
+      - "5555:5555"
     environment:
-      - REDIS_URL=redis://rd:6379/0
+      - REDIS_URL=redis://cache:6379/0
+      - FLOWER_BASIC_AUTH=admin:${FLOWER_PASSWORD}
     depends_on:
-      - rd
-      - cw
-
-  fr:
-    build: ./frontend
-    container_name: fr
-    environment:
-      - NEXT_PUBLIC_API_URL=https://apipdf.edcopo.info
-    depends_on:
-      - bk
+      - cache
+      - worker
+    networks:
+      - pdftr_default
     restart: unless-stopped
 
-  cd:
+  # Caddy reverse proxy and HTTPS termination
+  caddy:
     image: caddy:2-alpine
-    container_name: cd
     ports:
       - "80:80"
       - "443:443"
@@ -85,13 +140,46 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+      - ./uploads:/var/www/uploads
+      - ./logs:/var/log/caddy
+    environment:
+      - CADDY_INGRESS_NETWORKS=pdf_translation_platform_default
+    networks:
+      - pdftr_default
+    restart: unless-stopped
     depends_on:
-      - fr
-      - bk
-      - fl
+      - api
+      - web
+      - monitor
+
+  # Optional: Database Backup Service
+  backup:
+    image: postgres:15-alpine
+    environment:
+      - PGPASSWORD=password
+    volumes:
+      - ./backups:/backups
+      - postgres_data:/var/lib/postgresql/data
+    command: |
+      sh -c '
+        while true; do
+          pg_dump -h db -U user pdftr > /backups/backup_$$(date +%Y%m%d_%H%M%S).sql
+          find /backups -name "backup_*.sql" -mtime +7 -delete
+          sleep 86400
+        done
+      '
+    depends_on:
+      - db
+    networks:
+      - pdftr_default
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   redis_data:
   caddy_data:
   caddy_config:
+
+networks:
+  pdftr_default:
+    driver: bridge

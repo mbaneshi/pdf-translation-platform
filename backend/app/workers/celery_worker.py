@@ -1,8 +1,8 @@
 from celery import Celery
-from core.config import settings
-from core.database import SessionLocal
-from services.translation_service import TranslationService
-from models import PDFPage, TranslationJob
+from app.core.config import settings
+from app.core.database import SessionLocal
+from app.services.translation_service import TranslationService
+from app.models.models import PDFPage, TranslationJob
 import logging
 from sqlalchemy.orm import Session
 

@@ -131,13 +131,13 @@ docker stats
 ### Backup Management
 ```bash
 # Manual database backup
-docker-compose -f docker-compose.prod.yml exec postgres pg_dump -U user pdf_translate > backup_$(date +%Y%m%d_%H%M%S).sql
+docker-compose -f docker-compose.prod.yml exec postgres pg_dump -U user pdftr > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Check backup directory
 ls -la backups/
 
 # Restore from backup
-docker-compose -f docker-compose.prod.yml exec -T postgres psql -U user pdf_translate < backup_file.sql
+docker-compose -f docker-compose.prod.yml exec -T postgres psql -U user pdftr < backup_file.sql
 ```
 
 ### Log Management
@@ -230,10 +230,10 @@ sudo chmod -R 755 uploads/
 #### 1. Database Optimization
 ```bash
 # Check database size
-docker-compose -f docker-compose.prod.yml exec postgres psql -U user -d pdf_translate -c "SELECT pg_size_pretty(pg_database_size('pdf_translate'));"
+docker-compose -f docker-compose.prod.yml exec postgres psql -U user -d pdftr -c "SELECT pg_size_pretty(pg_database_size('pdftr'));"
 
 # Analyze query performance
-docker-compose -f docker-compose.prod.yml exec postgres psql -U user -d pdf_translate -c "ANALYZE;"
+docker-compose -f docker-compose.prod.yml exec postgres psql -U user -d pdftr -c "ANALYZE;"
 ```
 
 #### 2. Redis Optimization

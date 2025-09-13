@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/pdf_translate")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/pdftr")
     
     # Redis
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")

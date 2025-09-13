@@ -20,13 +20,13 @@ if grep -q "your_openai_api_key_here" .env; then
 fi
 
 echo "📦 Starting infrastructure services..."
-docker-compose up -d postgres redis
+docker-compose up -d db cache
 
 echo "⏳ Waiting for services to be healthy..."
 sleep 10
 
 echo "🔧 Starting application services..."
-docker-compose up -d backend celery-worker flower
+docker-compose up -d api worker monitor
 
 echo "✅ Services started successfully!"
 echo ""
