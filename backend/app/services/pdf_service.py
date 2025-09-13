@@ -1,8 +1,8 @@
 import fitz
 import os
 from sqlalchemy.orm import Session
-from models import PDFDocument, PDFPage
-from core.config import settings
+from app.models.enhanced_models import PDFDocument, PDFPage
+from app.core.config import settings
 from typing import List, Dict
 import json
 from datetime import datetime
