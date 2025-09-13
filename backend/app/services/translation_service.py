@@ -4,7 +4,7 @@ from typing import Optional, Dict, List
 from app.core.config import settings
 import tqdm
 from sqlalchemy.orm import Session
-from app.models.enhanced_models import PDFPage
+from app.models.models import PDFPage
 import logging
 from app.services.persian_text_processor import PersianTextProcessor
 import tiktoken
