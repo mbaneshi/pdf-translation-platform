@@ -2,7 +2,7 @@ from celery import Celery
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.services.translation_service import TranslationService
-from app.models.enhanced_models import PDFPage, TranslationJob
+from app.models.models import PDFPage, TranslationJob
 import logging
 from sqlalchemy.orm import Session
 
