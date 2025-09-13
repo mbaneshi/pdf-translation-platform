@@ -81,7 +81,7 @@ jobs:
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
         REDIS_URL: redis://localhost:6379/0
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || '' }}
       run: |
         pytest --cov=app --cov-report=xml --cov-report=html
 
@@ -173,7 +173,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [docker-build]
     if: github.ref == 'refs/heads/develop'
-    environment: staging
     
     steps:
     - uses: actions/checkout@v4
@@ -190,7 +189,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [docker-build]
     if: github.ref == 'refs/heads/main'
-    environment: production
     
     steps:
     - uses: actions/checkout@v4
@@ -205,14 +203,24 @@ jobs:
   # Security and Dependency Scanning
   security-scan:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['python', 'javascript']
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Run CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
       with:
-        languages: python, javascript
+        languages: ${{ matrix.language }}
+    
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v2
+    
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
     
     - name: Run Dependency Review
       uses: actions/dependency-review-action@v3
