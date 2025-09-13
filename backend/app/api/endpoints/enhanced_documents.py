@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 from typing import List, Dict, Optional
 import os
 import uuid
+import logging
+import traceback
 from datetime import datetime
 
 from app.core.database import get_db
@@ -18,6 +20,9 @@ from app.services.translation_service import TranslationService
 from app.workers.celery_worker import process_document_translation
 import aiofiles
 
+# Configure logging
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 @router.post("/upload-enhanced", response_model=dict)
@@ -26,72 +31,164 @@ async def upload_pdf_enhanced(
     db: Session = Depends(get_db)
 ):
     """Upload PDF document with enhanced processing and layout preservation"""
-    if not file.filename.endswith('.pdf'):
-        raise HTTPException(400, "Only PDF files are allowed")
     
-    # Create upload directory if not exists
-    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-    
-    # Generate unique filename
-    file_id = str(uuid.uuid4())
-    filename = f"{file_id}.pdf"
-    file_path = os.path.join(settings.UPLOAD_DIR, filename)
-    
-    # Save file
-    async with aiofiles.open(file_path, 'wb') as f:
-        content = await file.read()
-        await f.write(content)
-    
-    # Get file size
-    file_size = os.path.getsize(file_path)
+    # Log upload attempt
+    logger.info(f"Enhanced upload attempt started: filename={file.filename}, content_type={file.content_type}, size={file.size}")
     
     try:
-        # Use enhanced PDF service for layout preservation
-        enhanced_service = EnhancedPDFService()
-        pdf_doc = enhanced_service.save_enhanced_pdf_to_db(db, filename, file.filename, file_path)
+        # Enhanced file validation
+        if not file.filename:
+            error_msg = "No filename provided"
+            logger.error(error_msg)
+            raise HTTPException(status_code=400, detail=error_msg)
         
-        return {
-            "message": "File uploaded successfully with enhanced processing",
-            "document_id": pdf_doc.id,
-            "uuid": pdf_doc.uuid,
-            "total_pages": pdf_doc.total_pages,
-            "file_size_bytes": file_size,
-            "layout_preservation": True,
-            "enhanced_features": ["layout_analysis", "table_detection", "format_preservation"]
-        }
+        if not file.filename.lower().endswith('.pdf'):
+            error_msg = f"Only PDF files are allowed. Received: {file.filename}"
+            logger.error(error_msg)
+            raise HTTPException(status_code=400, detail=error_msg)
         
+        # Check file size
+        if file.size and file.size > settings.MAX_FILE_SIZE:
+            error_msg = f"File too large. Maximum size: {settings.MAX_FILE_SIZE} bytes, received: {file.size} bytes"
+            logger.error(error_msg)
+            raise HTTPException(status_code=413, detail=error_msg)
+        
+        # Check if file is empty
+        if file.size == 0:
+            error_msg = "File is empty"
+            logger.error(error_msg)
+            raise HTTPException(status_code=400, detail=error_msg)
+        
+        # Create upload directory if not exists
+        try:
+            os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+            logger.debug(f"Upload directory ensured: {settings.UPLOAD_DIR}")
+        except Exception as e:
+            error_msg = f"Failed to create upload directory: {str(e)}"
+            logger.error(error_msg)
+            raise HTTPException(status_code=500, detail=error_msg)
+        
+        # Generate unique filename
+        file_id = str(uuid.uuid4())
+        filename = f"{file_id}.pdf"
+        file_path = os.path.join(settings.UPLOAD_DIR, filename)
+        
+        logger.info(f"Generated file path: {file_path}")
+        
+        # Save file with error handling
+        try:
+            async with aiofiles.open(file_path, 'wb') as f:
+                content = await file.read()
+                await f.write(content)
+            
+            # Verify file was written correctly
+            if not os.path.exists(file_path):
+                error_msg = "File was not saved successfully"
+                logger.error(error_msg)
+                raise HTTPException(status_code=500, detail=error_msg)
+            
+            actual_size = os.path.getsize(file_path)
+            if actual_size != len(content):
+                error_msg = f"File size mismatch. Expected: {len(content)}, Actual: {actual_size}"
+                logger.error(error_msg)
+                raise HTTPException(status_code=500, detail=error_msg)
+            
+            logger.info(f"File saved successfully: {file_path}, size: {actual_size} bytes")
+            
+        except Exception as e:
+            error_msg = f"Failed to save file: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            # Clean up partial file
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                    logger.debug(f"Cleaned up partial file: {file_path}")
+                except:
+                    pass
+            raise HTTPException(status_code=500, detail=error_msg)
+        
+        # Try enhanced processing first
+        try:
+            logger.info("Attempting enhanced PDF processing")
+            enhanced_service = EnhancedPDFService()
+            pdf_doc = enhanced_service.save_enhanced_pdf_to_db(db, filename, file.filename, file_path)
+            
+            logger.info(f"Enhanced processing successful: document_id={pdf_doc.id}")
+            
+            return {
+                "message": "File uploaded successfully with enhanced processing",
+                "document_id": pdf_doc.id,
+                "uuid": pdf_doc.uuid,
+                "total_pages": pdf_doc.total_pages,
+                "file_size_bytes": actual_size,
+                "layout_preservation": True,
+                "enhanced_features": ["layout_analysis", "table_detection", "format_preservation"]
+            }
+            
+        except Exception as e:
+            # Fallback to basic processing
+            logger.warning(f"Enhanced processing failed, falling back to basic: {str(e)}", exc_info=True)
+            
+            try:
+                pdf_doc = PDFDocument(
+                    filename=filename,
+                    original_filename=file.filename,
+                    file_path=file_path,
+                    file_size_bytes=actual_size,
+                    status="uploaded"
+                )
+                
+                db.add(pdf_doc)
+                db.commit()
+                db.refresh(pdf_doc)
+                
+                logger.info(f"Basic document saved to database: id={pdf_doc.id}, uuid={pdf_doc.uuid}")
+                
+                # Extract pages and basic info
+                try:
+                    total_pages = PDFService.extract_and_save_pages(db, pdf_doc.id, file_path)
+                    logger.info(f"Pages extracted successfully: {total_pages} pages")
+                except Exception as page_error:
+                    logger.warning(f"Failed to extract pages: {str(page_error)}", exc_info=True)
+                    total_pages = 0
+                
+                # Update document with page count
+                pdf_doc.total_pages = total_pages
+                db.commit()
+                
+                logger.info(f"Basic upload completed successfully: document_id={pdf_doc.id}")
+                
+                return {
+                    "message": "File uploaded successfully (basic processing)",
+                    "document_id": pdf_doc.id,
+                    "uuid": pdf_doc.uuid,
+                    "total_pages": total_pages,
+                    "file_size_bytes": actual_size,
+                    "layout_preservation": False,
+                    "enhanced_features": [],
+                    "fallback_reason": str(e)
+                }
+                
+            except Exception as basic_error:
+                error_msg = f"Both enhanced and basic processing failed: {str(basic_error)}"
+                logger.error(error_msg, exc_info=True)
+                # Clean up saved file
+                try:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                        logger.debug(f"Cleaned up file after processing error: {file_path}")
+                except:
+                    pass
+                raise HTTPException(status_code=500, detail=error_msg)
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
-        # Fallback to basic processing
-        logger.warning(f"Enhanced processing failed, falling back to basic: {e}")
-        
-        pdf_doc = PDFDocument(
-            filename=filename,
-            original_filename=file.filename,
-            file_path=file_path,
-            file_size_bytes=file_size,
-            status="uploaded"
-        )
-        
-        db.add(pdf_doc)
-        db.commit()
-        db.refresh(pdf_doc)
-        
-        # Extract pages and basic info
-        total_pages = PDFService.extract_and_save_pages(db, pdf_doc.id, file_path)
-        
-        # Update document with page count
-        pdf_doc.total_pages = total_pages
-        db.commit()
-        
-        return {
-            "message": "File uploaded successfully (basic processing)",
-            "document_id": pdf_doc.id,
-            "uuid": pdf_doc.uuid,
-            "total_pages": total_pages,
-            "file_size_bytes": file_size,
-            "layout_preservation": False,
-            "enhanced_features": []
-        }
+        # Catch any unexpected errors
+        error_msg = f"Unexpected error during enhanced upload: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error during enhanced upload")
 
 @router.post("/analyze-semantic/{document_id}")
 async def analyze_semantic_structure(
