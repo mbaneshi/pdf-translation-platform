@@ -32,7 +32,9 @@ pdf.edcopo.info {
                 header_up Host {host}
                 header_up X-Real-IP {remote}
                 header_up X-Forwarded-For {remote}
-                header_up X-Forwarded-Proto {scheme}
+                header_up X-Forwarded-Proto https
+                header_up CF-Connecting-IP {remote}
+                header_up CF-Ray {header.CF-Ray}
             }
         }
 
@@ -42,7 +44,9 @@ pdf.edcopo.info {
                 header_up Host {host}
                 header_up X-Real-IP {remote}
                 header_up X-Forwarded-For {remote}
-                header_up X-Forwarded-Proto {scheme}
+                header_up X-Forwarded-Proto https
+                header_up CF-Connecting-IP {remote}
+                header_up CF-Ray {header.CF-Ray}
             }
         }
 
@@ -58,7 +62,9 @@ pdf.edcopo.info {
                 header_up Host {host}
                 header_up X-Real-IP {remote}
                 header_up X-Forwarded-For {remote}
-                header_up X-Forwarded-Proto {scheme}
+                header_up X-Forwarded-Proto https
+                header_up CF-Connecting-IP {remote}
+                header_up CF-Ray {header.CF-Ray}
             }
         }
     }
@@ -72,10 +78,10 @@ pdf.edcopo.info {
         X-XSS-Protection "1; mode=block"
         Referrer-Policy "strict-origin-when-cross-origin"
         
-        # CORS headers for API
+        # CORS headers for API (Cloudflare Flexible SSL)
         Access-Control-Allow-Origin "https://pdf.edcopo.info"
         Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-        Access-Control-Allow-Headers "Content-Type, Authorization"
+        Access-Control-Allow-Headers "Content-Type, Authorization, X-Forwarded-Proto, CF-Connecting-IP"
     }
 
     # Handle preflight requests
@@ -85,7 +91,7 @@ pdf.edcopo.info {
     handle @options {
         header Access-Control-Allow-Origin "https://pdf.edcopo.info"
         header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-        header Access-Control-Allow-Headers "Content-Type, Authorization"
+        header Access-Control-Allow-Headers "Content-Type, Authorization, X-Forwarded-Proto, CF-Connecting-IP"
         respond 200
     }
 }
@@ -115,7 +121,9 @@ apipdf.edcopo.info {
         header_up Host {host}
         header_up X-Real-IP {remote}
         header_up X-Forwarded-For {remote}
-        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Proto https
+        header_up CF-Connecting-IP {remote}
+        header_up CF-Ray {header.CF-Ray}
     }
 
     # API-specific headers
@@ -149,7 +157,9 @@ adminpdf.edcopo.info {
         header_up Host {host}
         header_up X-Real-IP {remote}
         header_up X-Forwarded-For {remote}
-        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Proto https
+        header_up CF-Connecting-IP {remote}
+        header_up CF-Ray {header.CF-Ray}
     }
 
     # Admin-specific headers
@@ -176,7 +186,9 @@ docspdf.edcopo.info {
         header_up Host {host}
         header_up X-Real-IP {remote}
         header_up X-Forwarded-For {remote}
-        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Proto https
+        header_up CF-Connecting-IP {remote}
+        header_up CF-Ray {header.CF-Ray}
     }
 
     # Redirect /docs to /docs/
@@ -192,8 +204,12 @@ docspdf.edcopo.info {
 
 # Global configuration
 {
-    # Global options
+    # Global options for Cloudflare Flexible SSL
     auto_https off
+    
+    # Trust Cloudflare proxy headers
+    trusted_proxies private_ranges
+    
     servers {
         metrics
     }
