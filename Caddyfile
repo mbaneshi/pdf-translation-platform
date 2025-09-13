@@ -1,162 +1,76 @@
-# Caddyfile for PDF Translation Platform
-# Production configuration for edcopo.info
+# Cloudflare Full SSL configuration
+{
+    email your-email@edcopo.info
+    
+    # Logging
+    log {
+        level INFO
+        format json
+    }
+}
 
 # Main application - Frontend + API
 pdf.edcopo.info {
-    # Enable HTTPS with automatic Let's Encrypt certificates
-    tls {
-        # Caddy will automatically get certificates from Let's Encrypt
-        # No additional configuration needed for production
-    }
-
-    # Logging
-    log {
-        output file /var/log/caddy/pdf.log
-        format json
-    }
-
-    # Rate limiting for API endpoints
-    rate_limit {
-        zone static {
-            key {remote_host}
-            events 100
-            window 1m
+    # Automatic HTTPS with Let's Encrypt (enabled by default)
+    
+    # API routes - proxy to FastAPI backend
+    handle /api/* {
+        reverse_proxy backend:8000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-Proto https
+            header_up CF-Connecting-IP {remote}
         }
     }
 
-    # Main application routing
-    route {
-        # API routes - proxy to FastAPI backend
-        handle /api/* {
-            reverse_proxy backend:8000 {
-                header_up Host {host}
-                header_up X-Real-IP {remote}
-                header_up X-Forwarded-For {remote}
-                header_up X-Forwarded-Proto https
-                header_up CF-Connecting-IP {remote}
-                header_up CF-Ray {header.CF-Ray}
-                
-                # Health check and error handling
-                health_uri /health
-                health_interval 30s
-                health_timeout 10s
-                fail_duration 30s
-                max_fails 3
-                
-                # Retry configuration
-                try_duration 30s
-                try_interval 1s
-            }
+    # Admin panel - proxy to Celery Flower
+    handle /admin/* {
+        reverse_proxy flower:5555 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-Proto https
+            header_up CF-Connecting-IP {remote}
         }
+    }
 
-        # Admin panel - proxy to Celery Flower
-        handle /admin/* {
-            reverse_proxy flower:5555 {
-                header_up Host {host}
-                header_up X-Real-IP {remote}
-                header_up X-Forwarded-For {remote}
-                header_up X-Forwarded-Proto https
-                header_up CF-Connecting-IP {remote}
-                header_up CF-Ray {header.CF-Ray}
-            }
-        }
+    # Static files and uploads
+    handle /uploads/* {
+        root * /var/www/uploads
+        file_server
+    }
 
-        # Static files and uploads
-        handle /uploads/* {
-            root * /var/www/uploads
-            file_server
-        }
-
-        # Frontend - proxy to Next.js
-        handle {
-            reverse_proxy frontend:3000 {
-                header_up Host {host}
-                header_up X-Real-IP {remote}
-                header_up X-Forwarded-For {remote}
-                header_up X-Forwarded-Proto https
-                header_up CF-Connecting-IP {remote}
-                header_up CF-Ray {header.CF-Ray}
-                
-                # Health check and error handling
-                health_uri /
-                health_interval 30s
-                health_timeout 10s
-                fail_duration 30s
-                max_fails 3
-                
-                # Retry configuration
-                try_duration 30s
-                try_interval 1s
-            }
+    # Frontend - proxy to Next.js (default)
+    handle {
+        reverse_proxy frontend:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-Proto https
+            header_up CF-Connecting-IP {remote}
         }
     }
 
     # Security headers
     header {
-        # Security headers
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Content-Type-Options "nosniff"
         X-Frame-Options "DENY"
         X-XSS-Protection "1; mode=block"
         Referrer-Policy "strict-origin-when-cross-origin"
-        
-        # CORS headers for API (Cloudflare Flexible SSL)
         Access-Control-Allow-Origin "https://pdf.edcopo.info"
         Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
         Access-Control-Allow-Headers "Content-Type, Authorization, X-Forwarded-Proto, CF-Connecting-IP"
     }
-
-    # Handle preflight requests
-    @options {
-        method OPTIONS
-    }
-    handle @options {
-        header Access-Control-Allow-Origin "https://pdf.edcopo.info"
-        header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-        header Access-Control-Allow-Headers "Content-Type, Authorization, X-Forwarded-Proto, CF-Connecting-IP"
-        respond 200
-    }
 }
 
-# API-only subdomain (optional)
+# API-only subdomain
 apipdf.edcopo.info {
-    tls {
-        # Automatic Let's Encrypt certificates
-    }
-
-    log {
-        output file /var/log/caddy/api.log
-        format json
-    }
-
-    # Rate limiting for API
-    rate_limit {
-        zone api {
-            key {remote_host}
-            events 200
-            window 1m
-        }
-    }
-
-    # Proxy to FastAPI backend
+    # Automatic HTTPS with Let's Encrypt (enabled by default)
+    
     reverse_proxy backend:8000 {
         header_up Host {host}
         header_up X-Real-IP {remote}
-        header_up X-Forwarded-For {remote}
         header_up X-Forwarded-Proto https
         header_up CF-Connecting-IP {remote}
-        header_up CF-Ray {header.CF-Ray}
-        
-        # Health check and error handling
-        health_uri /health
-        health_interval 30s
-        health_timeout 10s
-        fail_duration 30s
-        max_fails 3
-        
-        # Retry configuration
-        try_duration 30s
-        try_interval 1s
     }
 
     # API-specific headers
@@ -171,28 +85,18 @@ apipdf.edcopo.info {
 
 # Admin panel subdomain
 adminpdf.edcopo.info {
-    tls {
-        # Automatic Let's Encrypt certificates
-    }
-
-    log {
-        output file /var/log/caddy/admin.log
-        format json
-    }
-
+    # Automatic HTTPS with Let's Encrypt (enabled by default)
+    
     # Basic authentication for admin access
-    basicauth {
+    basic_auth {
         admin $2a$14$your_hashed_password_here
     }
 
-    # Proxy to Celery Flower
     reverse_proxy flower:5555 {
         header_up Host {host}
         header_up X-Real-IP {remote}
-        header_up X-Forwarded-For {remote}
         header_up X-Forwarded-Proto https
         header_up CF-Connecting-IP {remote}
-        header_up CF-Ray {header.CF-Ray}
     }
 
     # Admin-specific headers
@@ -205,23 +109,13 @@ adminpdf.edcopo.info {
 
 # Documentation subdomain
 docspdf.edcopo.info {
-    tls {
-        # Automatic Let's Encrypt certificates
-    }
-
-    log {
-        output file /var/log/caddy/docs.log
-        format json
-    }
-
-    # Serve API documentation
+    # Automatic HTTPS with Let's Encrypt (enabled by default)
+    
     reverse_proxy backend:8000 {
         header_up Host {host}
         header_up X-Real-IP {remote}
-        header_up X-Forwarded-For {remote}
         header_up X-Forwarded-Proto https
         header_up CF-Connecting-IP {remote}
-        header_up CF-Ray {header.CF-Ray}
     }
 
     # Redirect /docs to /docs/
@@ -232,34 +126,5 @@ docspdf.edcopo.info {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Content-Type-Options "nosniff"
         Cache-Control "public, max-age=3600"
-    }
-}
-
-# Global configuration
-{
-    # Global options for Cloudflare Flexible SSL
-    auto_https off
-    
-    # Trust Cloudflare proxy headers and IP ranges
-    trusted_proxies 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/12 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22
-    
-    # Enable HTTP to HTTPS redirects
-    servers {
-        metrics
-        protocols h1 h2 h3
-    }
-    
-    # Email for Let's Encrypt notifications
-    email your-email@edcopo.info
-    
-    # Logging
-    log {
-        level INFO
-        format json
-    }
-    
-    # Cloudflare-specific settings
-    servers {
-        strict_sni_host
     }
 }
