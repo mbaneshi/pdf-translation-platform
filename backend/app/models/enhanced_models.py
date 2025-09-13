@@ -2,12 +2,11 @@
 # backend/app/models/enhanced_models.py
 
 from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Boolean, Float, BigInteger, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 
-Base = declarative_base()
+from app.core.database import Base
 
 def generate_uuid():
     return str(uuid.uuid4())
@@ -47,7 +46,7 @@ class PDFDocument(Base):
     
     # Status and metadata
     status = Column(String(50), default="uploaded")
-    metadata = Column(JSON, default=dict)
+    document_metadata = Column(JSON, default=dict)
     analysis_completed = Column(Boolean, default=False)
     
     created_at = Column(DateTime, default=datetime.utcnow)
