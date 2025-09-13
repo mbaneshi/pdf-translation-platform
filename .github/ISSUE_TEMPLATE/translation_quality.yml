@@ -1,0 +1,51 @@
+---
+name: Translation Quality Issue
+about: Report issues with translation quality or accuracy
+title: '[TRANSLATION] '
+labels: translation-quality
+assignees: ''
+
+---
+
+**Document Information**
+- Document type: [e.g. Technical manual, Academic paper, Legal document]
+- Language pair: English → Persian
+- Page numbers affected: [e.g. 1-5, 10, 15-20]
+
+**Translation Issues**
+Describe the specific translation problems:
+
+**Original Text (English)**
+```
+Paste the original English text here
+```
+
+**Current Translation (Persian)**
+```
+Paste the current Persian translation here
+```
+
+**Expected Translation (Persian)**
+```
+Paste what you think the correct translation should be here
+```
+
+**Issues Identified**
+- [ ] Incorrect terminology
+- [ ] Grammar errors
+- [ ] Context misunderstanding
+- [ ] Formatting issues
+- [ ] Missing content
+- [ ] Cultural context problems
+
+**Severity**
+- [ ] Minor (cosmetic)
+- [ ] Moderate (affects understanding)
+- [ ] Major (significantly impacts meaning)
+- [ ] Critical (completely wrong)
+
+**Additional Context**
+Provide any additional context about the document or translation requirements.
+
+**Suggested Improvements**
+If you have suggestions for improving the translation, please share them here.

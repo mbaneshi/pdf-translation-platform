@@ -485,4 +485,4 @@ cython_debug/
 *.7z
 *.gz
 *.bz2
-*.xz
+*.xzbackups/

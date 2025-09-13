@@ -1,11 +1,14 @@
+version: '3.8'
+
 services:
-  db:
+  postgres:
     image: postgres:13-alpine
-    container_name: db
     environment:
       POSTGRES_DB: pdf_translate
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -14,9 +17,10 @@ services:
       timeout: 5s
       retries: 5
 
-  rd:
+  redis:
     image: redis:7-alpine
-    container_name: rd
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -25,73 +29,49 @@ services:
       timeout: 5s
       retries: 5
 
-  bk:
+  backend:
     build: ./backend
-    container_name: bk
+    ports:
+      - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://user:password@db/pdf_translate
-      - REDIS_URL=redis://rd:6379/0
+      - DATABASE_URL=postgresql://user:password@postgres/pdf_translate
+      - REDIS_URL=redis://redis:6379/0
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
-      rd:
+      redis:
         condition: service_healthy
     volumes:
       - ./uploads:/app/uploads
     restart: unless-stopped
 
-  cw:
+  celery-worker:
     build: ./backend
-    container_name: cw
     command: celery -A app.workers.celery_worker.celery_app worker --loglevel=info
     environment:
-      - DATABASE_URL=postgresql://user:password@db/pdf_translate
-      - REDIS_URL=redis://rd:6379/0
+      - DATABASE_URL=postgresql://user:password@postgres/pdf_translate
+      - REDIS_URL=redis://redis:6379/0
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     depends_on:
-      - bk
-      - rd
+      - backend
+      - redis
     volumes:
       - ./uploads:/app/uploads
     restart: unless-stopped
 
-  fl:
+  # Optional: Celery flower for monitoring
+  flower:
     build: ./backend
-    container_name: fl
     command: celery -A app.workers.celery_worker.celery_app flower --port=5555
-    environment:
-      - REDIS_URL=redis://rd:6379/0
-    depends_on:
-      - rd
-      - cw
-
-  fr:
-    build: ./frontend
-    container_name: fr
-    environment:
-      - NEXT_PUBLIC_API_URL=https://apipdf.edcopo.info
-    depends_on:
-      - bk
-    restart: unless-stopped
-
-  cd:
-    image: caddy:2-alpine
-    container_name: cd
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
+      - "5555:5555"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
-      - fr
-      - bk
-      - fl
+      - redis
+      - celery-worker
 
 volumes:
   postgres_data:
   redis_data:
-  caddy_data:
-  caddy_config:
