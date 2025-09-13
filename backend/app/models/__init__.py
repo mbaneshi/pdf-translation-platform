@@ -1,5 +1,5 @@
-# Import all models from enhanced_models to avoid duplication
-from app.models.enhanced_models import (
+# Import all models from models.py
+from app.models.models import (
     PDFDocument,
     PDFPage, 
     TranslationJob,
