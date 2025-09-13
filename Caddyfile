@@ -50,14 +50,10 @@ apipdf.edcopo.info {
         header_up CF-Connecting-IP {remote}
     }
 
-    # API-specific headers
+    # Security headers only - let FastAPI handle CORS
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Content-Type-Options "nosniff"
-        Access-Control-Allow-Origin "https://pdf.edcopo.info"
-        Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-        Access-Control-Allow-Headers "Content-Type, Authorization, X-Forwarded-Proto, CF-Connecting-IP"
-        Access-Control-Allow-Credentials "true"
     }
 }
 
