@@ -9,30 +9,10 @@
     }
 }
 
-# Main application - Frontend + API
+# Main application - Frontend only
 pdf.edcopo.info {
     # Automatic HTTPS with Let's Encrypt (enabled by default)
     
-    # API routes - proxy to FastAPI backend
-    handle /api/* {
-        reverse_proxy backend:8000 {
-            header_up Host {host}
-            header_up X-Real-IP {remote}
-            header_up X-Forwarded-Proto https
-            header_up CF-Connecting-IP {remote}
-        }
-    }
-
-    # Admin panel - proxy to Celery Flower
-    handle /admin/* {
-        reverse_proxy flower:5555 {
-            header_up Host {host}
-            header_up X-Real-IP {remote}
-            header_up X-Forwarded-Proto https
-            header_up CF-Connecting-IP {remote}
-        }
-    }
-
     # Static files and uploads
     handle /uploads/* {
         root * /var/www/uploads
@@ -41,7 +21,7 @@ pdf.edcopo.info {
 
     # Frontend - proxy to Next.js (default)
     handle {
-        reverse_proxy frontend:3000 {
+        reverse_proxy web:3000 {
             header_up Host {host}
             header_up X-Real-IP {remote}
             header_up X-Forwarded-Proto https
@@ -56,9 +36,6 @@ pdf.edcopo.info {
         X-Frame-Options "DENY"
         X-XSS-Protection "1; mode=block"
         Referrer-Policy "strict-origin-when-cross-origin"
-        Access-Control-Allow-Origin "https://pdf.edcopo.info"
-        Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-        Access-Control-Allow-Headers "Content-Type, Authorization, X-Forwarded-Proto, CF-Connecting-IP"
     }
 }
 
@@ -66,7 +43,7 @@ pdf.edcopo.info {
 apipdf.edcopo.info {
     # Automatic HTTPS with Let's Encrypt (enabled by default)
     
-    reverse_proxy backend:8000 {
+    reverse_proxy api:8000 {
         header_up Host {host}
         header_up X-Real-IP {remote}
         header_up X-Forwarded-Proto https
@@ -77,9 +54,10 @@ apipdf.edcopo.info {
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Content-Type-Options "nosniff"
-        Access-Control-Allow-Origin "*"
+        Access-Control-Allow-Origin "https://pdf.edcopo.info"
         Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-        Access-Control-Allow-Headers "Content-Type, Authorization"
+        Access-Control-Allow-Headers "Content-Type, Authorization, X-Forwarded-Proto, CF-Connecting-IP"
+        Access-Control-Allow-Credentials "true"
     }
 }
 
@@ -92,7 +70,7 @@ adminpdf.edcopo.info {
         admin $2a$14$your_hashed_password_here
     }
 
-    reverse_proxy flower:5555 {
+    reverse_proxy monitor:5555 {
         header_up Host {host}
         header_up X-Real-IP {remote}
         header_up X-Forwarded-Proto https
@@ -111,7 +89,7 @@ adminpdf.edcopo.info {
 docspdf.edcopo.info {
     # Automatic HTTPS with Let's Encrypt (enabled by default)
     
-    reverse_proxy backend:8000 {
+    reverse_proxy api:8000 {
         header_up Host {host}
         header_up X-Real-IP {remote}
         header_up X-Forwarded-Proto https
