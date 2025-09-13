@@ -7,7 +7,7 @@ from datetime import datetime
 
 from app.core.database import get_db
 from app.core.config import settings
-from app.models.enhanced_models import PDFDocument, PDFPage
+from app.models.models import PDFDocument, PDFPage
 from app.services.pdf_service import PDFService
 from app.services.translation_service import TranslationService
 from app.workers.celery_worker import process_document_translation
