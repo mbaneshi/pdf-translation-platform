@@ -91,9 +91,21 @@ Persian Translation:
                 return processed_text
                 
             except Exception as e:
+                # Handle specific OpenAI API errors
+                if hasattr(e, 'status_code'):
+                    if e.status_code == 429:
+                        logger.error(f"OpenAI API quota exceeded: {e}")
+                        raise ValueError("Translation service quota exceeded. Please check your OpenAI billing settings.")
+                    elif e.status_code == 401:
+                        logger.error(f"OpenAI API authentication failed: {e}")
+                        raise ValueError("Translation service authentication failed. Please check your OpenAI API key.")
+                    elif e.status_code == 500:
+                        logger.error(f"OpenAI API server error: {e}")
+                        raise ValueError("Translation service temporarily unavailable. Please try again later.")
+                
                 if attempt == max_retries - 1:
                     logger.error(f"Translation failed after {max_retries} attempts: {e}")
-                    raise
+                    raise ValueError(f"Translation failed: {str(e)}")
                 logger.warning(f"Attempt {attempt + 1} failed, retrying...")
                 time.sleep(2 ** attempt)
         

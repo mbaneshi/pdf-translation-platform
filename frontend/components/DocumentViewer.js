@@ -49,7 +49,20 @@ const DocumentViewer = ({ documentId }) => {
       toast.success(`Test translation completed for page ${pageNumber}`);
       loadDocument(); // Refresh to show updated status
     } catch (error) {
-      toast.error('Test translation failed: ' + error.message);
+      // Handle specific error types with user-friendly messages
+      let errorMessage = 'Test translation failed: ' + error.message;
+      
+      if (error.message.includes('quota exceeded')) {
+        errorMessage = 'Translation service quota exceeded. Please check your OpenAI billing settings.';
+      } else if (error.message.includes('authentication failed')) {
+        errorMessage = 'Translation service authentication failed. Please check your OpenAI API key.';
+      } else if (error.message.includes('temporarily unavailable')) {
+        errorMessage = 'Translation service is temporarily unavailable. Please try again later.';
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage = 'Unable to connect to translation service. Please check your connection and try again.';
+      }
+      
+      toast.error(errorMessage);
     }
   };
 

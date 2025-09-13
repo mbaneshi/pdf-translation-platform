@@ -197,16 +197,31 @@ async def mark_test_page(
     db: Session = Depends(get_db)
 ):
     """Mark page as test page and translate it"""
-    page = PDFService.mark_page_as_test(db, document_id, page_number)
-    if not page:
-        raise HTTPException(404, "Page not found")
-    
-    # Translate the test page
-    translation_service = TranslationService()
-    translated_page = translation_service.translate_page(db, page.id)
-    
-    return {
-        "message": "Test page translated",
-        "page_number": page_number,
-        "translated_text": translated_page.translated_text
-    }
+    try:
+        page = PDFService.mark_page_as_test(db, document_id, page_number)
+        if not page:
+            raise HTTPException(404, "Page not found")
+        
+        # Translate the test page
+        translation_service = TranslationService()
+        translated_page = translation_service.translate_page(db, page.id)
+        
+        return {
+            "message": "Test page translated",
+            "page_number": page_number,
+            "translated_text": translated_page.translated_text
+        }
+    except ValueError as e:
+        # Handle translation service errors (quota, auth, etc.)
+        error_message = str(e)
+        if "quota exceeded" in error_message.lower():
+            raise HTTPException(402, error_message)  # Payment Required
+        elif "authentication failed" in error_message.lower():
+            raise HTTPException(503, error_message)  # Service Unavailable
+        elif "temporarily unavailable" in error_message.lower():
+            raise HTTPException(503, error_message)  # Service Unavailable
+        else:
+            raise HTTPException(500, error_message)
+    except Exception as e:
+        logger.error(f"Unexpected error in test translation: {e}")
+        raise HTTPException(500, f"Test translation failed: {str(e)}")
