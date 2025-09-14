@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
+import { useTheme } from '../contexts/ThemeContext';
+import { PDFIcon, ProcessIcon, CheckIcon, LoadingIcon } from './Icons';
 import toast from 'react-hot-toast';
 
 const DocumentViewer = ({ documentId }) => {
@@ -7,6 +9,7 @@ const DocumentViewer = ({ documentId }) => {
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [translating, setTranslating] = useState(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (documentId) {
@@ -101,16 +104,16 @@ const DocumentViewer = ({ documentId }) => {
   return (
     <div className="space-y-8">
       {/* Document Info Card */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
+      <div className={`${theme.cardBg} backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8`}>
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+            <div className={`w-12 h-12 bg-gradient-to-r ${theme.primary} rounded-xl flex items-center justify-center shadow-lg`}>
+              <PDFIcon className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">{document.filename}</h2>
+              <h2 className={`text-2xl font-bold ${theme.text} mb-1 truncate max-w-2xl`} title={document.filename}>
+                {document.filename}
+              </h2>
               <div className="flex items-center space-x-2">
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                   document.status === 'completed' ? 'bg-green-100 text-green-800' :
@@ -134,10 +137,8 @@ const DocumentViewer = ({ documentId }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+              <div className={`w-8 h-8 bg-gradient-to-r ${theme.primary} rounded-lg flex items-center justify-center`}>
+                <PDFIcon className="w-4 h-4 text-white" />
               </div>
               <div>
                 <p className="text-sm text-blue-600 font-medium">Total Pages</p>
@@ -146,37 +147,33 @@ const DocumentViewer = ({ documentId }) => {
             </div>
           </div>
           
-          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border border-indigo-200">
+          <div className="bg-gradient-to-br from-cyan-50 to-teal-100 rounded-xl p-4 border border-cyan-200">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                </svg>
+              <div className={`w-8 h-8 bg-gradient-to-r ${theme.secondary} rounded-lg flex items-center justify-center`}>
+                <ProcessIcon className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-indigo-600 font-medium">Characters</p>
-                <p className="text-xl font-bold text-indigo-900">{document.total_characters?.toLocaleString()}</p>
+                <p className="text-sm text-cyan-600 font-medium">Characters</p>
+                <p className="text-xl font-bold text-cyan-900">{document.total_characters?.toLocaleString()}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+          <div className="bg-gradient-to-br from-teal-50 to-emerald-100 rounded-xl p-4 border border-teal-200">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className={`w-8 h-8 bg-gradient-to-r ${theme.accent} rounded-lg flex items-center justify-center`}>
+                <CheckIcon className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-purple-600 font-medium">Uploaded</p>
-                <p className="text-lg font-bold text-purple-900">{new Date(document.created_at).toLocaleDateString()}</p>
+                <p className="text-sm text-teal-600 font-medium">Uploaded</p>
+                <p className="text-lg font-bold text-teal-900">{new Date(document.created_at).toLocaleDateString()}</p>
               </div>
             </div>
           </div>
           
           <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -194,19 +191,17 @@ const DocumentViewer = ({ documentId }) => {
           <button
             onClick={handleStartTranslation}
             disabled={translating || document.status === 'processing'}
-            className="group relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className={`group relative bg-gradient-to-r ${theme.primary} text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
           >
             <div className="flex items-center space-x-2">
               {translating ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  <LoadingIcon className="w-4 h-4 text-white" />
                   <span>Starting Translation...</span>
                 </>
               ) : (
                 <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
+                  <ProcessIcon className="w-5 h-5 text-white" />
                   <span>Start Full Translation</span>
                 </>
               )}
