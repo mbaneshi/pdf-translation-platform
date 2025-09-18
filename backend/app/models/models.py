@@ -82,8 +82,8 @@ class PDFPage(Base):
     philosophical_concepts = Column(JSON, default=list)
     proper_nouns = Column(JSON, default=list)
     technical_terms = Column(JSON, default=list)
-    # Generic per-page metadata for auxiliary processing/validation results
-    metadata = Column(JSON, default=dict)
+    # Generic per-page metadata for auxiliary processing/validation results (not persisted)
+    # Note: DB schema currently has no 'metadata' column. Use transient attribute if needed.
     
     # Complexity metrics
     readability_score = Column(Float, default=0.0)
