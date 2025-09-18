@@ -512,33 +512,16 @@ async def start_gradual_translation(
         raise HTTPException(404, "Document not found")
     
     try:
-        # Create translation job
-        job = TranslationJob(
-            document_id=document_id,
-            job_type="gradual",
-            status="pending",
-            total_pages=len(selected_pages) if selected_pages else document.total_pages
-        )
-        
-        db.add(job)
-        db.commit()
-        
-        # Start celery task for gradual translation
-        task = process_document_translation.delay(document_id, job.id)
-        job.celery_task_id = task.id
-        job.status = "started"
-        job.started_at = datetime.utcnow()
-        
-        db.commit()
-        
+        # Start celery task for gradual translation (task will create its own job)
+        task = process_document_translation.delay(document_id)
+
         return {
             "message": "Gradual translation started",
             "document_id": document_id,
-            "job_id": job.id,
             "task_id": task.id,
             "strategy": strategy,
             "selected_pages": selected_pages,
-            "total_pages": job.total_pages
+            "total_pages": document.total_pages
         }
         
     except Exception as e:
