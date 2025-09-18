@@ -5,7 +5,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { UploadIcon, LoadingIcon } from './Icons';
 import toast from 'react-hot-toast';
 
-const FileUpload = ({ onUploadSuccess }) => {
+const FileUpload = ({ onUploadSuccess, onUploadError }) => {
   const [uploading, setUploading] = useState(false);
   const [lastError, setLastError] = useState(null);
   const { theme } = useTheme();
@@ -129,12 +129,17 @@ const FileUpload = ({ onUploadSuccess }) => {
         };
       }
 
-      setLastError({
+      const errObj = {
         type: errorDetails.type,
         message: errorMessage,
         details: errorDetails,
         timestamp: new Date().toISOString()
-      });
+      };
+
+      setLastError(errObj);
+      if (onUploadError) {
+        try { onUploadError({ message: errorMessage, code: errorDetails.type }); } catch {}
+      }
 
       toast.error(errorMessage);
     } finally {
