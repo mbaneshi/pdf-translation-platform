@@ -1,0 +1,231 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "PDF Translation Platform - Operational Dashboard",
+    "tags": ["pdf-translation", "production"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Translation Request Rate",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(translation_requests_total[5m])",
+            "legendFormat": "Requests/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 5},
+                {"color": "red", "value": 10}
+              ]
+            },
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Translation Error Rate",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(translation_errors_total[5m]) / rate(translation_requests_total[5m]) * 100",
+            "legendFormat": "Error %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 5}
+              ]
+            },
+            "unit": "percent",
+            "max": 100
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Translation Latency (95th Percentile)",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(translation_latency_seconds_bucket[5m]))",
+            "legendFormat": "95th %ile"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 30},
+                {"color": "red", "value": 60}
+              ]
+            },
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Current Translation Cost (USD/hour)",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(translation_cost_usd_total[1h]) * 3600",
+            "legendFormat": "$/hour"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 10},
+                {"color": "red", "value": 50}
+              ]
+            },
+            "unit": "currencyUSD"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Translation Requests Over Time",
+        "type": "graph",
+        "gridPos": {"h": 9, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(translation_requests_total[5m])",
+            "legendFormat": "{{path}} - {{mode}}"
+          }
+        ],
+        "yAxes": [
+          {"label": "Requests/sec", "min": 0},
+          {"show": false}
+        ],
+        "legend": {"show": true},
+        "lines": true,
+        "fill": 1
+      },
+      {
+        "id": 6,
+        "title": "Translation Latency Distribution",
+        "type": "graph",
+        "gridPos": {"h": 9, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(translation_latency_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(translation_latency_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(translation_latency_seconds_bucket[5m]))",
+            "legendFormat": "99th percentile"
+          }
+        ],
+        "yAxes": [
+          {"label": "Seconds", "min": 0},
+          {"show": false}
+        ],
+        "legend": {"show": true}
+      },
+      {
+        "id": 7,
+        "title": "Token Usage Over Time",
+        "type": "graph",
+        "gridPos": {"h": 9, "w": 12, "x": 0, "y": 17},
+        "targets": [
+          {
+            "expr": "rate(translation_tokens_input_total[5m])",
+            "legendFormat": "Input tokens/sec"
+          },
+          {
+            "expr": "rate(translation_tokens_output_total[5m])",
+            "legendFormat": "Output tokens/sec"
+          }
+        ],
+        "yAxes": [
+          {"label": "Tokens/sec", "min": 0},
+          {"show": false}
+        ],
+        "legend": {"show": true}
+      },
+      {
+        "id": 8,
+        "title": "Cost Accumulation",
+        "type": "graph",
+        "gridPos": {"h": 9, "w": 12, "x": 12, "y": 17},
+        "targets": [
+          {
+            "expr": "increase(translation_cost_usd_total[1h])",
+            "legendFormat": "Cost increase (USD/hour)"
+          }
+        ],
+        "yAxes": [
+          {"label": "USD", "min": 0},
+          {"show": false}
+        ],
+        "legend": {"show": true}
+      },
+      {
+        "id": 9,
+        "title": "Error Breakdown",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 26},
+        "targets": [
+          {
+            "expr": "sum by (path, mode, reason) (rate(translation_errors_total[5m]))",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "styles": [
+          {"pattern": "Time", "type": "hidden"},
+          {"pattern": "path", "type": "string"},
+          {"pattern": "mode", "type": "string"},
+          {"pattern": "reason", "type": "string"},
+          {"pattern": "Value", "type": "number", "unit": "reqps"}
+        ]
+      },
+      {
+        "id": 10,
+        "title": "System Health",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 26},
+        "targets": [
+          {
+            "expr": "up{job=\"pdf-translation\"}",
+            "format": "table",
+            "instant": true
+          }
+        ]
+      }
+    ],
+    "time": {"from": "now-1h", "to": "now"},
+    "refresh": "10s",
+    "schemaVersion": 27,
+    "version": 1,
+    "links": []
+  }
+}
