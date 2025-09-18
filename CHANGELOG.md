@@ -6,6 +6,8 @@
 - docs: Traefik migration and integration guides
 - docs: Translation enhancements V1–V3 proposals
 - docs: Current state, execution plan, development process, and timeline docs
+- feat(backend): scaffolding for chunked translation (LLM chat client, chunker, translator orchestrator) behind feature flag
+- test(backend): unit tests for chunker, translator, and cost estimator
 
 ### Changed
 - infra: Integrated with existing Traefik; removed Caddy service; added traefik-proxy network and routing labels

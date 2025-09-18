@@ -13,6 +13,7 @@
   - Backend: FastAPI with endpoints for upload, pages, sample translate, enhanced flows, Celery workers.
   - Frontend: Next.js app; basic viewer; UI enhancements planned.
   - Tests: Pytest structure with unit/integration; Jest setup present.
+  - New scaffolding (Phase 1): LLM chat client wrapper, token‑aware chunker, translator orchestrator, with unit tests; gated by `USE_CHUNKING`.
 - Documentation
   - Traefik migration/integration runbooks; Translation Enhancements V1–V3; execution plan below.
 - Gaps

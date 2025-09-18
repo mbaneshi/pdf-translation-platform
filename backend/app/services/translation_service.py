@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.models.models import PDFPage
 import logging
 from app.services.persian_text_processor import PersianTextProcessor
+from app.services.translator import Translator
 import tiktoken
 
 logger = logging.getLogger(__name__)
@@ -116,7 +117,11 @@ Persian Translation:
         page = db.query(PDFPage).filter(PDFPage.id == page_id).first()
         if not page:
             raise ValueError("Page not found")
-        
+        # Feature-flagged chunked path using chat API
+        if settings.USE_CHUNKING:
+            translator = Translator()
+            return translator.translate_page_chunked(db, page_id)
+
         try:
             page.translation_status = "processing"
             db.commit()
