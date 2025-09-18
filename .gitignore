@@ -318,6 +318,7 @@ cython_debug/
 *.backup
 *.old
 *.orig
+backups/
 
 # OS generated files
 .DS_Store

@@ -1,0 +1,6 @@
+Alembic migrations for the FastAPI backend.
+
+Usage:
+- Set DATABASE_URL via environment or .env
+- Run: alembic upgrade head
+

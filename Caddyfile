@@ -63,7 +63,7 @@ adminpdf.edcopo.info {
     
     # Basic authentication for admin access
     basic_auth {
-        admin $2a$14$your_hashed_password_here
+        admin $2y$05$9b3uiQoEAfMTcBE2JC0.fuS6v8mJnPy4N9JCZMJk4fizNrjjQ2M8a
     }
 
     reverse_proxy monitor:5555 {
@@ -85,15 +85,18 @@ adminpdf.edcopo.info {
 docspdf.edcopo.info {
     # Automatic HTTPS with Let's Encrypt (enabled by default)
     
-    reverse_proxy api:8000 {
-        header_up Host {host}
-        header_up X-Real-IP {remote}
-        header_up X-Forwarded-Proto https
-        header_up CF-Connecting-IP {remote}
+    # Handle /docs path specifically
+    handle /docs* {
+        reverse_proxy api:8000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-Proto https
+            header_up CF-Connecting-IP {remote}
+        }
     }
 
-    # Redirect /docs to /docs/
-    redir /docs /docs/ 301
+    # Redirect root to /docs
+    redir / /docs/ 301
 
     # Documentation headers
     header {

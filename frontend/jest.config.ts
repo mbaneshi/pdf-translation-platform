@@ -26,11 +26,11 @@ const config: Config = {
     '<rootDir>/cypress/'
   ],
   collectCoverageFrom: [
-    'components/**/*.{ts,tsx}',
-    'lib/**/*.{ts,tsx}',
-    'pages/**/*.{ts,tsx}',
-    'hooks/**/*.{ts,tsx}',
-    'utils/**/*.{ts,tsx}',
+    'components/**/*.{ts,tsx,js,jsx}',
+    'lib/**/*.{ts,tsx,js,jsx}',
+    'pages/**/*.{ts,tsx,js,jsx}',
+    'hooks/**/*.{ts,tsx,js,jsx}',
+    'utils/**/*.{ts,tsx,js,jsx}',
     '!**/*.d.ts',
     '!**/node_modules/**',
     '!**/cypress/**',
@@ -48,7 +48,8 @@ const config: Config = {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: '<rootDir>/tsconfig.test.json',
       useESM: false
-    }]
+    }],
+    '^.+\\.(js|jsx)$': ['babel-jest', { presets: ['@babel/preset-env', '@babel/preset-react'] }]
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   testEnvironmentOptions: {

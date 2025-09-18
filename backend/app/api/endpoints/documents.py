@@ -28,7 +28,8 @@ async def upload_pdf(
     """Upload PDF document with comprehensive error handling and logging"""
     
     # Log upload attempt
-    logger.info(f"Upload attempt started: filename={file.filename}, content_type={file.content_type}, size={file.size}")
+    safe_size = getattr(file, "size", None)
+    logger.info(f"Upload attempt started: filename={file.filename}, content_type={file.content_type}, size={safe_size}")
     
     try:
         # Enhanced file validation
@@ -43,13 +44,13 @@ async def upload_pdf(
             raise HTTPException(status_code=400, detail=error_msg)
         
         # Check file size
-        if file.size and file.size > settings.MAX_FILE_SIZE:
+        if safe_size is not None and safe_size > settings.MAX_FILE_SIZE:
             error_msg = f"File too large. Maximum size: {settings.MAX_FILE_SIZE} bytes, received: {file.size} bytes"
             logger.error(error_msg)
             raise HTTPException(status_code=413, detail=error_msg)
         
         # Check if file is empty
-        if file.size == 0:
+        if safe_size == 0:
             error_msg = "File is empty"
             logger.error(error_msg)
             raise HTTPException(status_code=400, detail=error_msg)

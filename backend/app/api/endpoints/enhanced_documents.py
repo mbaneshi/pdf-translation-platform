@@ -33,7 +33,8 @@ async def upload_pdf_enhanced(
     """Upload PDF document with enhanced processing and layout preservation"""
     
     # Log upload attempt
-    logger.info(f"Enhanced upload attempt started: filename={file.filename}, content_type={file.content_type}, size={file.size}")
+    safe_size = getattr(file, "size", None)
+    logger.info(f"Enhanced upload attempt started: filename={file.filename}, content_type={file.content_type}, size={safe_size}")
     
     try:
         # Enhanced file validation
@@ -48,13 +49,13 @@ async def upload_pdf_enhanced(
             raise HTTPException(status_code=400, detail=error_msg)
         
         # Check file size
-        if file.size and file.size > settings.MAX_FILE_SIZE:
+        if safe_size is not None and safe_size > settings.MAX_FILE_SIZE:
             error_msg = f"File too large. Maximum size: {settings.MAX_FILE_SIZE} bytes, received: {file.size} bytes"
             logger.error(error_msg)
             raise HTTPException(status_code=413, detail=error_msg)
         
         # Check if file is empty
-        if file.size == 0:
+        if safe_size == 0:
             error_msg = "File is empty"
             logger.error(error_msg)
             raise HTTPException(status_code=400, detail=error_msg)
