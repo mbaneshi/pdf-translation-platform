@@ -106,6 +106,9 @@ class PDFPage(Base):
     translation_model = Column(String(100))
     translation_time = Column(Float)
     cost_estimate = Column(Float, default=0.0)
+    # Usage metrics (chat)
+    tokens_in = Column(Integer, default=0)
+    tokens_out = Column(Integer, default=0)
     is_test_page = Column(Boolean, default=False)
     
     # Format preservation

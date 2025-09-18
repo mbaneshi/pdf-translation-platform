@@ -56,5 +56,10 @@ class Translator:
         page.translation_status = "completed"
         page.translation_model = "chat:"  # model captured internally; optional to expose here
         page.cost_estimate = result["cost_usd"]
+        try:
+            page.tokens_in = int(result.get("prompt_tokens", 0))
+            page.tokens_out = int(result.get("completion_tokens", 0))
+        except Exception:
+            pass
         db.commit()
         return page

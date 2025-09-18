@@ -175,6 +175,9 @@ async def get_document_pages(document_id: int, db: Session = Depends(get_db)):
         "page_number": page.page_number,
         "char_count": page.char_count,
         "translation_status": page.translation_status,
+        "tokens_in": getattr(page, 'tokens_in', 0),
+        "tokens_out": getattr(page, 'tokens_out', 0),
+        "cost_estimate": getattr(page, 'cost_estimate', 0.0),
         "is_test_page": page.is_test_page,
         "created_at": page.created_at
     } for page in pages]
