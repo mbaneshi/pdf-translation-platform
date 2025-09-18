@@ -20,3 +20,4 @@
   - Translation uses legacy completions; no token-aware chunking in production path yet.
   - Limited observability metrics; glossary/exports pending.
   - In progress: /metrics endpoint added; initial counters/histograms in translator; integration tests for chunked flag.
+  - Pilot: Enabled USE_CHUNKING for API (compose env). Smoke translate succeeded on test.pdf via internal network; see `trial/smoke_chunked.txt`.
