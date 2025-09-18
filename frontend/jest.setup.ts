@@ -1,4 +1,6 @@
 import '@testing-library/jest-dom';
+// Polyfill fetch/Response/Request/Headers for Jest (jsdom)
+import 'whatwg-fetch';
 import React from 'react';
 
 // Mock Next.js router
@@ -39,16 +41,21 @@ jest.mock('next/link', () => {
   };
 });
 
-// Mock react-hot-toast
-jest.mock('react-hot-toast', () => ({
-  toast: {
+// Mock react-hot-toast (default export + named toast + Toaster)
+jest.mock('react-hot-toast', () => {
+  const mockToast = {
     success: jest.fn(),
     error: jest.fn(),
     loading: jest.fn(),
     dismiss: jest.fn(),
-  },
-  Toaster: () => null,
-}));
+  };
+  return {
+    __esModule: true,
+    default: mockToast,
+    toast: mockToast,
+    Toaster: () => null,
+  };
+});
 
 // Mock react-dropzone
 jest.mock('react-dropzone', () => ({
@@ -75,8 +82,14 @@ global.IntersectionObserver = jest.fn().mockImplementation(() => ({
   disconnect: jest.fn(),
 }));
 
-// Mock fetch
-global.fetch = jest.fn();
+// Provide a default jest.fn fetch, while keeping Response/Request/Headers from whatwg-fetch
+if (!(global as any).fetch) {
+  (global as any).fetch = jest.fn();
+}
+// Ensure globals use the whatwg-fetch versions for consistency in tests
+(global as any).Response = (window as any).Response;
+(global as any).Request = (window as any).Request;
+(global as any).Headers = (window as any).Headers;
 
 // Suppress console warnings in tests
 const originalWarn = console.warn;
