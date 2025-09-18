@@ -117,6 +117,8 @@ services:
       - DATABASE_URL=postgresql://user:password@db/pdftr
       - REDIS_URL=redis://cache:6379/0
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_CHAT_MODEL=${OPENAI_CHAT_MODEL:-gpt-4o-mini}
+      - USE_CHUNKING=${USE_CHUNKING:-true}
       - ENVIRONMENT=production
     depends_on:
       - api
