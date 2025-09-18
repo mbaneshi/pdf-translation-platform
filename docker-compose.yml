@@ -84,7 +84,7 @@ services:
     # No host port; Traefik routes traffic
     environment:
       - NODE_ENV=production
-      # Both browser and server-side use dedicated API subdomain through Caddy
+      # Both browser and server-side use dedicated API subdomain via Traefik
       - NEXT_PUBLIC_API_URL=https://apipdf.edcopo.info
       - NEXT_PUBLIC_APP_URL=https://pdf.edcopo.info
     depends_on:
@@ -150,6 +150,7 @@ services:
       traefik.http.routers.pdftr-flower.entrypoints: "websecure"
       traefik.http.routers.pdftr-flower.tls: "true"
       traefik.http.routers.pdftr-flower.tls.certresolver: "cloudflare"
+      traefik.http.routers.pdftr-flower.middlewares: "studio-auth@file"
       traefik.http.services.pdftr-flower.loadbalancer.server.port: "5555"
 
   
@@ -179,8 +180,6 @@ services:
 volumes:
   postgres_data:
   redis_data:
-  caddy_data:
-  caddy_config:
 
 networks:
   pdftr_default:
