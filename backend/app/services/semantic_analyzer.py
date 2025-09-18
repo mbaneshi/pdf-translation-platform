@@ -59,7 +59,8 @@ class SemanticAnalyzer:
             
             for page_num in range(len(doc)):
                 page = doc.load_page(page_num)
-                page_structures = self._analyze_page_structure(page, page_num)
+                # Call the public analyzer method (correct name)
+                page_structures = self.analyze_page_structure(page, page_num)
                 
                 # Aggregate structures by type
                 for structure_type, structures in page_structures.items():

@@ -5,6 +5,7 @@ from app.services.translation_service import TranslationService
 from app.models.models import PDFPage, TranslationJob
 import logging
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ def translate_page_task(self, page_id: int, job_id: int):
 def process_document_translation(self, document_id: int):
     """Process entire document translation"""
     db = SessionLocal()
-    
+    job = None
     try:
         # Create translation job
         job = TranslationJob(
@@ -60,7 +61,7 @@ def process_document_translation(self, document_id: int):
             celery_task_id=self.request.id,
             status="processing",
             total_pages=db.query(PDFPage).filter(PDFPage.document_id == document_id).count(),
-            started_at=db.func.now()
+            started_at=datetime.utcnow(),
         )
         db.add(job)
         db.commit()
@@ -82,9 +83,12 @@ def process_document_translation(self, document_id: int):
         
     except Exception as e:
         logger.error(f"Error processing document {document_id}: {e}")
-        if job:
-            job.status = "failed"
-            db.commit()
+        if job is not None:
+            try:
+                job.status = "failed"
+                db.commit()
+            except Exception:
+                logger.exception("Failed to mark job as failed")
         raise e
         
     finally:

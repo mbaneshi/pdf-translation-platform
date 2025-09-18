@@ -82,6 +82,19 @@ docker-compose up -d backend celery-worker flower
 cd backend
 pip install -r requirements.txt
 uvicorn app.main:app --reload
+
+### Database Migrations (Alembic)
+
+This repository includes Alembic for schema migrations.
+
+1. Configure your database URL in `.env` (or export `DATABASE_URL`).
+2. Run migrations:
+```bash
+cd backend
+alembic upgrade head
+```
+
+The current migration adds a `metadata` JSON column to `pdf_pages` for per-page processing results.
 ```
 
 ### Frontend Development
