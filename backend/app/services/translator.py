@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.models.models import PDFPage
 from app.services.chunker import Chunker
 from app.services.llm_client import LLMClient, OpenAIChatClient, estimate_cost_usd
+from app.metrics import translation_requests, translation_latency, translation_errors
 from app.services.prompt_library import PARAGRAPH_SYSTEM, paragraph_user
 
 
@@ -26,7 +27,13 @@ class Translator:
         ctoks = 0
 
         for ch in chunks:
-            res = self.llm.chat(PARAGRAPH_SYSTEM, paragraph_user(ch.text), temperature=0.1, max_tokens=800)
+            translation_requests.labels(path="translator.translate_text", mode="chat").inc()
+            with translation_latency.labels(path="translator.translate_text", mode="chat").time():
+                try:
+                    res = self.llm.chat(PARAGRAPH_SYSTEM, paragraph_user(ch.text), temperature=0.1, max_tokens=800)
+                except Exception as e:  # pragma: no cover
+                    translation_errors.labels(path="translator.translate_text", mode="chat", reason=type(e).__name__).inc()
+                    raise
             out_parts.append(res.text)
             ptoks += res.prompt_tokens
             ctoks += res.completion_tokens
@@ -51,4 +58,3 @@ class Translator:
         page.cost_estimate = result["cost_usd"]
         db.commit()
         return page
-

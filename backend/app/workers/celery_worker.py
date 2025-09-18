@@ -30,14 +30,18 @@ def translate_page_task(self, page_id: int, job_id: int):
     translation_service = TranslationService()
     
     try:
-        # Update job progress
+        # Translate the page
+        page = translation_service.translate_page(db, page_id)
+
+        # Update job progress and accumulate cost after successful translation
         job = db.query(TranslationJob).filter(TranslationJob.id == job_id).first()
         if job:
             job.pages_processed += 1
+            try:
+                job.actual_cost = (job.actual_cost or 0.0) + float(page.cost_estimate or 0.0)
+            except Exception:
+                pass
             db.commit()
-        
-        # Translate the page
-        page = translation_service.translate_page(db, page_id)
         logger.info(f"Translated page {page.page_number}")
         
         return {"status": "success", "page_id": page_id}

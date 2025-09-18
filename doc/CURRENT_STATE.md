@@ -19,3 +19,4 @@
 - Gaps
   - Translation uses legacy completions; no token-aware chunking in production path yet.
   - Limited observability metrics; glossary/exports pending.
+  - In progress: /metrics endpoint added; initial counters/histograms in translator; integration tests for chunked flag.

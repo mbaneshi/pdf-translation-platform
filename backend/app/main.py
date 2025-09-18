@@ -1,10 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.core.database import engine, Base
 from app.api.endpoints import documents, enhanced_documents
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -47,3 +48,8 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+@app.get("/metrics")
+async def metrics():
+    data = generate_latest()
+    return Response(content=data, media_type=CONTENT_TYPE_LATEST)
