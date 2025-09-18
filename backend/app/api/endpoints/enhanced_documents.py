@@ -560,16 +560,29 @@ async def get_translation_progress(
     ).order_by(TranslationJob.created_at.desc()).first()
     
     if not job:
+        # Even without a job, provide page-level rollups
+        pages = db.query(PDFPage).filter(PDFPage.document_id == document_id).all()
+        tokens_in_total = sum(int(getattr(p, 'tokens_in', 0) or 0) for p in pages)
+        tokens_out_total = sum(int(getattr(p, 'tokens_out', 0) or 0) for p in pages)
+        pages_cost_total = float(sum((p.cost_estimate or 0.0) for p in pages))
         return {
             "document_id": document_id,
             "status": "no_job",
             "progress": 0,
-            "message": "No translation job found"
+            "message": "No translation job found",
+            "tokens_in_total": tokens_in_total,
+            "tokens_out_total": tokens_out_total,
+            "pages_cost_total": pages_cost_total,
         }
     
     # Calculate progress
     progress_percentage = (job.pages_processed / job.total_pages * 100) if job.total_pages > 0 else 0
-    
+    # Page-level rollups
+    pages = db.query(PDFPage).filter(PDFPage.document_id == document_id).all()
+    tokens_in_total = sum(int(getattr(p, 'tokens_in', 0) or 0) for p in pages)
+    tokens_out_total = sum(int(getattr(p, 'tokens_out', 0) or 0) for p in pages)
+    pages_cost_total = float(sum((p.cost_estimate or 0.0) for p in pages))
+
     return {
         "document_id": document_id,
         "job_id": job.id,
@@ -580,5 +593,28 @@ async def get_translation_progress(
         "estimated_cost": job.estimated_cost,
         "actual_cost": job.actual_cost,
         "started_at": job.started_at,
-        "completed_at": job.completed_at
+        "completed_at": job.completed_at,
+        "tokens_in_total": tokens_in_total,
+        "tokens_out_total": tokens_out_total,
+        "pages_cost_total": pages_cost_total,
     }
+
+@router.get("/export/{document_id}")
+async def export_document_markdown(
+    document_id: int,
+    db: Session = Depends(get_db)
+):
+    """Export translated document as a simple Markdown concatenation (skeleton)."""
+    document = db.query(PDFDocument).filter(PDFDocument.id == document_id).first()
+    if not document:
+        raise HTTPException(404, "Document not found")
+
+    pages = db.query(PDFPage).filter(PDFPage.document_id == document_id).order_by(PDFPage.page_number.asc()).all()
+    if not pages:
+        raise HTTPException(400, "No pages found for document")
+
+    parts = []
+    for p in pages:
+        parts.append(f"\n\n# Page {p.page_number}\n\n{(p.translated_text or '').strip()}")
+    md = "".join(parts).strip() or "# Empty translation"
+    return {"document_id": document_id, "format": "markdown", "content": md}
