@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.models.models import PDFPage
 from app.services.chunker import Chunker
 from app.services.llm_client import LLMClient, OpenAIChatClient, estimate_cost_usd
-from app.metrics import translation_requests, translation_latency, translation_errors
+from app.metrics import MetricsCollector
 from app.services.prompt_library import PARAGRAPH_SYSTEM, paragraph_user
 
 
@@ -27,13 +27,32 @@ class Translator:
         ctoks = 0
 
         for ch in chunks:
-            translation_requests.labels(path="translator.translate_text", mode="chat").inc()
-            with translation_latency.labels(path="translator.translate_text", mode="chat").time():
-                try:
-                    res = self.llm.chat(PARAGRAPH_SYSTEM, paragraph_user(ch.text), temperature=0.1, max_tokens=800)
-                except Exception as e:  # pragma: no cover
-                    translation_errors.labels(path="translator.translate_text", mode="chat", reason=type(e).__name__).inc()
-                    raise
+            # Start metrics collection for chunk
+            start_time = MetricsCollector.record_translation_start(
+                "translator.translate_text", "chat", "gpt-4o-mini"
+            )
+
+            try:
+                res = self.llm.chat(PARAGRAPH_SYSTEM, paragraph_user(ch.text), temperature=0.1, max_tokens=800)
+
+                # Record success metrics for chunk
+                MetricsCollector.record_translation_success(
+                    start_time=start_time,
+                    path="translator.translate_text",
+                    mode="chat",
+                    model="gpt-4o-mini",
+                    tokens_in=res.prompt_tokens,
+                    tokens_out=res.completion_tokens,
+                    cost_usd=estimate_cost_usd(res.prompt_tokens, res.completion_tokens),
+                    complexity=MetricsCollector.assess_text_complexity(ch.text)
+                )
+
+            except Exception as e:  # pragma: no cover
+                MetricsCollector.record_translation_error(
+                    "translator.translate_text", "chat", type(e).__name__, str(e)
+                )
+                raise
+
             out_parts.append(res.text)
             ptoks += res.prompt_tokens
             ctoks += res.completion_tokens
@@ -51,15 +70,43 @@ class Translator:
         if not page:
             raise ValueError("Page not found")
 
-        result = self.translate_text(page.original_text or "")
-        page.translated_text = result["text"]
-        page.translation_status = "completed"
-        page.translation_model = "chat:"  # model captured internally; optional to expose here
-        page.cost_estimate = result["cost_usd"]
+        # Start page-level metrics collection
+        page_start_time = MetricsCollector.record_translation_start(
+            "translator.translate_page_chunked", "chat", "gpt-4o-mini"
+        )
+
         try:
-            page.tokens_in = int(result.get("prompt_tokens", 0))
-            page.tokens_out = int(result.get("completion_tokens", 0))
-        except Exception:
-            pass
-        db.commit()
-        return page
+            result = self.translate_text(page.original_text or "")
+            page.translated_text = result["text"]
+            page.translation_status = "completed"
+            page.translation_model = "chat:gpt-4o-mini"
+            page.cost_estimate = result["cost_usd"]
+
+            # Store token usage
+            try:
+                page.tokens_in = int(result.get("prompt_tokens", 0))
+                page.tokens_out = int(result.get("completion_tokens", 0))
+            except Exception:
+                pass
+
+            db.commit()
+
+            # Record page-level success metrics
+            MetricsCollector.record_translation_success(
+                start_time=page_start_time,
+                path="translator.translate_page_chunked",
+                mode="chat",
+                model="gpt-4o-mini",
+                tokens_in=page.tokens_in or 0,
+                tokens_out=page.tokens_out or 0,
+                cost_usd=page.cost_estimate or 0.0,
+                complexity=MetricsCollector.assess_text_complexity(page.original_text or "")
+            )
+
+            return page
+
+        except Exception as e:
+            MetricsCollector.record_translation_error(
+                "translator.translate_page_chunked", "chat", type(e).__name__, str(e)
+            )
+            raise
