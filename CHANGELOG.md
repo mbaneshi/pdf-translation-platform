@@ -1,5 +1,20 @@
 # PDF Translation Platform - Change Log
 
+## Unreleased
+
+### Added
+- docs: Traefik migration and integration guides
+- docs: Translation enhancements V1–V3 proposals
+- docs: Current state, execution plan, development process, and timeline docs
+
+### Changed
+- infra: Integrated with existing Traefik; removed Caddy service; added traefik-proxy network and routing labels
+- infra: Protected Flower with Traefik basic auth
+- infra: Removed host port publishes for internal services; improved healthchecks
+
+### Fixed
+- health: Use language-native healthchecks to avoid missing curl in containers
+
 ## Version 2.1.0 - Master Plan Implementation
 **Release Date**: December 2024
 **Status**: In Progress

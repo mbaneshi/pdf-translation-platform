@@ -1,9 +1,22 @@
 # PDF Translation Platform - Master Execution Plan
 
+> Status Update (2025-09)
+- Routing: Migrated to Traefik (external) with TLS; Flower behind basic auth.
+- API/WEB: Healthy via apipdf.edcopo.info and pdf.edcopo.info.
+- Docs: Added V1–V3 enhancement proposals and runbooks under doc/.
+- Next focus: TDD Phase 1 (LLM client + chunker + usage/cost capture) and minimal UI.
+
 ## 🎯 **MISSION OBJECTIVE**
 Complete the PDF translation platform implementation and deploy to production on edcopo.info with full Persian language support and semantic analysis capabilities.
 
 ## 📋 **MASTER EXECUTION PLAN**
+
+Timeline (target, iterative sprints)
+- Sprint A (1–2 weeks): Phase 1 TDD services (LLM client, chunker, translator), usage/cost tracking, CI gates.
+- Sprint B (1–2 weeks): Structure-aware prompts, review pass (optional), caching/rate limits, minimal UI dashboard.
+- Sprint C (1–2 weeks): Glossary, exporters (Markdown→HTML/DOCX), metrics dashboards, agent pilot.
+
+See also: doc/EXECUTION_PLAN.md and doc/TRANSLATION_ENHANCEMENTS_V3.md
 
 ### **PHASE 1: VALIDATION & TESTING (Day 1 - Today)**
 **Objective**: Validate all implementations work correctly with target PDF

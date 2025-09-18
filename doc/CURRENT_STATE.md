@@ -1,0 +1,20 @@
+# Current State (2025-09)
+
+- Deployment
+  - Reverse proxy: Existing Traefik v2.11 (external network `traefik-proxy`), Cloudflare DNS/ACME.
+  - Services up: `api`, `web`, `worker` x2, `monitor` (Flower), `db`, `cache`.
+  - Public endpoints: https://pdf.edcopo.info/, https://apipdf.edcopo.info/, https://flower.edcopo.info/ (basic auth).
+- Infrastructure
+  - Compose connects exposed services to `traefik-proxy`; no host port publishes for internal services.
+  - Healthchecks: Python/Node native checks; Redis/Postgres internal only.
+- Secrets
+  - OPENAI_API_KEY set in .env (gitignored); validated in container.
+- Codebase
+  - Backend: FastAPI with endpoints for upload, pages, sample translate, enhanced flows, Celery workers.
+  - Frontend: Next.js app; basic viewer; UI enhancements planned.
+  - Tests: Pytest structure with unit/integration; Jest setup present.
+- Documentation
+  - Traefik migration/integration runbooks; Translation Enhancements V1–V3; execution plan below.
+- Gaps
+  - Translation uses legacy completions; no token-aware chunking in production path yet.
+  - Limited observability metrics; glossary/exports pending.
