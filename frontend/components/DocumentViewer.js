@@ -72,6 +72,26 @@ const DocumentViewer = ({ documentId }) => {
     }
   };
 
+  const handleExportMarkdown = async () => {
+    try {
+      const res = await api.exportMarkdown(documentId);
+      const content = res?.content || '';
+      const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const safeName = (document?.filename || `document-${documentId}`).replace(/\s+/g, '_').replace(/[^\w\.-]/g, '');
+      a.href = url;
+      a.download = `${safeName}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Markdown exported');
+    } catch (error) {
+      toast.error('Failed to export Markdown: ' + (error.message || 'Unknown error'));
+    }
+  };
+
   const handleTestTranslation = async (pageNumber) => {
     try {
       const result = await api.translateTestPage(documentId, pageNumber);
@@ -247,6 +267,18 @@ const DocumentViewer = ({ documentId }) => {
                   <span>Start Full Translation</span>
                 </>
               )}
+            </div>
+          </button>
+
+          <button
+            onClick={handleExportMarkdown}
+            className="group relative bg-white text-gray-800 px-6 py-3 rounded-xl font-semibold shadow hover:shadow-md ring-1 ring-gray-200 hover:ring-gray-300 transition-all"
+          >
+            <div className="flex items-center space-x-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M7 10l5 5m0 0l5-5m-5 5V4" />
+              </svg>
+              <span>Download Markdown</span>
             </div>
           </button>
         </div>
