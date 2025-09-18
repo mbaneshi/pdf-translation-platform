@@ -162,7 +162,14 @@ class PDFService:
                     'text': text,
                     'blocks': blocks,
                     'images': images,
-                    'dimensions': page.rect
+                    'dimensions': {
+                        'x0': float(page.rect.x0),
+                        'y0': float(page.rect.y0),
+                        'x1': float(page.rect.x1),
+                        'y1': float(page.rect.y1),
+                        'width': float(page.rect.width),
+                        'height': float(page.rect.height)
+                    }
                 }
                 
                 pages_data.append(page_data)
