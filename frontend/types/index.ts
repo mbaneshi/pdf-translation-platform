@@ -21,7 +21,7 @@ export interface Page {
   page_number: number;
   char_count: number;
   translation_status: string;
-  is_test_page: boolean;
+  is_test_page?: boolean;
   created_at: string;
 }
 
@@ -41,11 +41,11 @@ export interface ApiError {
 
 // API Client Interface
 export interface ApiClient {
-  uploadDocument(file: File): Promise<UploadResponse>;
+  uploadDocument(file: File): Promise<any>;
   getDocument(documentId: number): Promise<Document>;
   getDocumentPages(documentId: number): Promise<Page[]>;
-  startTranslation(documentId: number): Promise<{ message: string; task_id: string }>;
-  translateTestPage(documentId: number, pageNumber: number): Promise<TranslationResult>;
+  startTranslation(documentId: number): Promise<any>;
+  translateTestPage(documentId: number, pageNumber: number): Promise<any>;
 }
 
 // Component Props
