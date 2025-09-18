@@ -142,9 +142,9 @@ Persian Translation:
             page.translation_model = self.model
             
             # Store validation results in metadata
-            if not hasattr(page, 'metadata') or page.metadata is None:
-                page.metadata = {}
-            page.metadata['persian_validation'] = validation_result
+            # Store validation results in page_metadata (avoid SQLAlchemy reserved name)
+            # Store validation summary transiently (not persisted in DB schema)
+            page.validation_summary = validation_result
             
             db.commit()
             return page
