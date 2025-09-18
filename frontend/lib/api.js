@@ -315,6 +315,14 @@ export const api = {
     return apiFetch(`/api/documents/${documentId}/pages`);
   },
 
+  getProgress: async (documentId) => {
+    return apiFetch(`/api/enhanced/translation-progress/${documentId}`);
+  },
+
+  exportMarkdown: async (documentId) => {
+    return apiFetch(`/api/enhanced/export/${documentId}`);
+  },
+
   startTranslation: async (documentId) => {
     return apiFetch(`/api/documents/${documentId}/translate`, {
       method: 'POST',

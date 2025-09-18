@@ -9,13 +9,39 @@ const DocumentViewer = ({ documentId }) => {
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [translating, setTranslating] = useState(false);
+  const [progress, setProgress] = useState(null);
+  const [polling, setPolling] = useState(false);
   const { theme } = useTheme();
 
   useEffect(() => {
     if (documentId) {
       loadDocument();
+      startPolling();
     }
+    return stopPolling;
   }, [documentId]);
+
+  const startPolling = () => {
+    if (polling) return;
+    setPolling(true);
+    const id = setInterval(async () => {
+      try {
+        const p = await api.getProgress(documentId);
+        setProgress(p);
+        const pagesData = await api.getDocumentPages(documentId);
+        setPages(pagesData);
+      } catch (e) {}
+    }, 3000);
+    if (typeof window !== 'undefined') window.__docPoll = id;
+  };
+
+  const stopPolling = () => {
+    if (typeof window !== 'undefined' && window.__docPoll) {
+      clearInterval(window.__docPoll);
+      delete window.__docPoll;
+    }
+    setPolling(false);
+  };
 
   const loadDocument = async () => {
     try {
@@ -106,7 +132,7 @@ const DocumentViewer = ({ documentId }) => {
       {/* Document Info Card */}
       <div className={`${theme.cardBg} backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8`}>
         <div className="flex items-start justify-between mb-6">
-          <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4">
             <div className={`w-12 h-12 bg-gradient-to-r ${theme.primary} rounded-xl flex items-center justify-center shadow-lg`}>
               <PDFIcon className="w-7 h-7 text-white" />
             </div>
@@ -133,7 +159,23 @@ const DocumentViewer = ({ documentId }) => {
             </div>
           </div>
         </div>
-        
+        {progress && (
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="rounded-lg bg-gray-50 p-4">
+              <div className="text-sm text-gray-500">Progress</div>
+              <div className="text-xl font-semibold text-gray-900">{Math.round(progress.progress_percentage || 0)}%</div>
+            </div>
+            <div className="rounded-lg bg-gray-50 p-4">
+              <div className="text-sm text-gray-500">Tokens (in/out)</div>
+              <div className="text-xl font-semibold text-gray-900">{(progress.tokens_in_total||0).toLocaleString()} / {(progress.tokens_out_total||0).toLocaleString()}</div>
+            </div>
+            <div className="rounded-lg bg-gray-50 p-4">
+              <div className="text-sm text-gray-500">Pages Cost (USD)</div>
+              <div className="text-xl font-semibold text-gray-900">${(progress.pages_cost_total||0).toFixed(4)}</div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
             <div className="flex items-center space-x-3">
@@ -240,12 +282,24 @@ const DocumentViewer = ({ documentId }) => {
                     <p className="text-lg font-semibold text-gray-900 group-hover:text-blue-700 transition-colors duration-200">
                       Page {page.page_number}
                     </p>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <div className="flex items-center space-x-6 text-sm text-gray-500">
                       <div className="flex items-center space-x-1">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                         </svg>
                         <span>{page.char_count.toLocaleString()} characters</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3z M19.4 15a1 1 0 00-.894-.553H5.494a1 1 0 00-.9.555l-1.5 3A1 1 0 004 19h16a1 1 0 00.9-1.445L19.4 15z" />
+                        </svg>
+                        <span>{(page.tokens_in||0).toLocaleString()} / {(page.tokens_out||0).toLocaleString()} tokens</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-2.21 0-4 1.79-4 4v6h8v-6c0-2.21-1.79-4-4-4z" />
+                        </svg>
+                        <span>${(page.cost_estimate||0).toFixed(4)}</span>
                       </div>
                     </div>
                   </div>
