@@ -3,14 +3,39 @@ import { useDropzone } from 'react-dropzone';
 import { api } from '../lib/api';
 import { useTheme } from '../contexts/ThemeContext';
 import { UploadIcon, LoadingIcon } from './Icons';
+import { UploadResponse } from '../types';
 import toast from 'react-hot-toast';
 
-const FileUpload = ({ onUploadSuccess, onUploadError }) => {
-  const [uploading, setUploading] = useState(false);
-  const [lastError, setLastError] = useState(null);
+interface FileUploadError {
+  type: string;
+  message: string;
+  details: {
+    filename?: string;
+    fileSize?: number;
+    maxSize?: number;
+    originalError?: string;
+    possibleCauses?: string[];
+    stack?: string;
+  };
+  timestamp: string;
+}
+
+interface FileUploadProps {
+  onUploadSuccess: (result: UploadResponse) => void;
+  onUploadError?: (error: { message: string; code?: string }) => void;
+  useEnhancedMode?: boolean;
+}
+
+const FileUpload: React.FC<FileUploadProps> = ({
+  onUploadSuccess,
+  onUploadError,
+  useEnhancedMode = false
+}) => {
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [lastError, setLastError] = useState<FileUploadError | null>(null);
   const { theme } = useTheme();
 
-  const logError = (error, context = '') => {
+  const logError = (error: Error, context = ''): void => {
     console.error(`[FileUpload] ${context}:`, {
       error: error.message,
       stack: error.stack,
@@ -21,7 +46,7 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
     });
   };
 
-  const onDrop = useCallback(async (acceptedFiles) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (!file) return;
 
@@ -32,7 +57,12 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
     if (!file.name.endsWith('.pdf')) {
       const errorMsg = 'Only PDF files are allowed';
       toast.error(errorMsg);
-      setLastError({ type: 'validation', message: errorMsg, details: { filename: file.name } });
+      setLastError({
+        type: 'validation',
+        message: errorMsg,
+        details: { filename: file.name },
+        timestamp: new Date().toISOString()
+      });
       return;
     }
 
@@ -41,14 +71,15 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
     if (file.size > maxSize) {
       const errorMsg = `File too large. Maximum size is ${Math.round(maxSize / 1024 / 1024)}MB`;
       toast.error(errorMsg);
-      setLastError({ 
-        type: 'validation', 
-        message: errorMsg, 
-        details: { 
-          filename: file.name, 
-          fileSize: file.size, 
-          maxSize: maxSize 
-        } 
+      setLastError({
+        type: 'validation',
+        message: errorMsg,
+        details: {
+          filename: file.name,
+          fileSize: file.size,
+          maxSize: maxSize
+        },
+        timestamp: new Date().toISOString()
       });
       return;
     }
@@ -57,10 +88,11 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
     if (file.size === 0) {
       const errorMsg = 'File is empty';
       toast.error(errorMsg);
-      setLastError({ 
-        type: 'validation', 
-        message: errorMsg, 
-        details: { filename: file.name } 
+      setLastError({
+        type: 'validation',
+        message: errorMsg,
+        details: { filename: file.name },
+        timestamp: new Date().toISOString()
       });
       return;
     }
@@ -74,22 +106,25 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
 
     setUploading(true);
     try {
-      const result = await api.uploadDocument(file);
+      const result = useEnhancedMode
+        ? await api.uploadEnhanced(file)
+        : await api.uploadDocument(file);
       console.log('[FileUpload] Upload successful:', result);
-      toast.success('File uploaded successfully!');
+      toast.success(useEnhancedMode
+        ? 'File uploaded with enhanced features!'
+        : 'File uploaded successfully!');
       onUploadSuccess(result);
-    } catch (error) {
+    } catch (error: any) {
       logError(error, 'Upload failed');
-      
+
       // Enhanced error handling with detailed information
       let errorMessage = 'Upload failed';
-      let errorDetails = {};
+      let errorDetails: FileUploadError['details'] = {};
 
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         // Network/CORS error
         errorMessage = 'Network error: Unable to connect to server';
         errorDetails = {
-          type: 'network',
           originalError: error.message,
           possibleCauses: [
             'Server is down',
@@ -102,35 +137,34 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
         // File too large
         errorMessage = 'File too large for upload';
         errorDetails = {
-          type: 'file_size',
           originalError: error.message
         };
       } else if (error.message.includes('415')) {
         // Unsupported media type
         errorMessage = 'Unsupported file type';
         errorDetails = {
-          type: 'file_type',
           originalError: error.message
         };
       } else if (error.message.includes('500')) {
         // Server error
         errorMessage = 'Server error occurred during upload';
         errorDetails = {
-          type: 'server_error',
           originalError: error.message
         };
       } else {
         // Generic error
         errorMessage = error.message || 'Unknown error occurred';
         errorDetails = {
-          type: 'unknown',
           originalError: error.message,
           stack: error.stack
         };
       }
 
-      const errObj = {
-        type: errorDetails.type,
+      const errObj: FileUploadError = {
+        type: errorDetails.originalError?.includes('network') ? 'network' :
+              errorDetails.originalError?.includes('413') ? 'file_size' :
+              errorDetails.originalError?.includes('415') ? 'file_type' :
+              errorDetails.originalError?.includes('500') ? 'server_error' : 'unknown',
         message: errorMessage,
         details: errorDetails,
         timestamp: new Date().toISOString()
@@ -138,14 +172,16 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
 
       setLastError(errObj);
       if (onUploadError) {
-        try { onUploadError({ message: errorMessage, code: errorDetails.type }); } catch {}
+        try {
+          onUploadError({ message: errorMessage, code: errObj.type });
+        } catch {}
       }
 
       toast.error(errorMessage);
     } finally {
       setUploading(false);
     }
-  }, [onUploadSuccess]);
+  }, [onUploadSuccess, onUploadError, useEnhancedMode]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -191,6 +227,14 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
               <p className="text-lg text-gray-500 group-hover:text-blue-600 transition-colors duration-300">
                 or click to browse files
               </p>
+              {useEnhancedMode && (
+                <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-2">
+                  <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Enhanced Mode - Advanced features enabled
+                </div>
+              )}
               <div className="flex items-center justify-center space-x-6 text-sm text-gray-400 mt-4">
                 <div className="flex items-center space-x-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,7 +252,7 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
             </div>
           )}
         </div>
-        
+
         {/* Decorative elements */}
         <div className="absolute top-4 right-4 w-8 h-8 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
         <div className="absolute bottom-4 left-4 w-6 h-6 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
@@ -292,3 +336,4 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
 };
 
 export default FileUpload;
+export type { FileUploadProps, FileUploadError };
