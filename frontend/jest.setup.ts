@@ -3,6 +3,14 @@ import '@testing-library/jest-dom';
 import 'whatwg-fetch';
 import React from 'react';
 
+// Polyfill TextEncoder/TextDecoder for MSW
+import { TextEncoder, TextDecoder } from 'util';
+
+// Add TextEncoder/TextDecoder to global
+Object.assign(global, { TextDecoder, TextEncoder });
+
+import { setupMSWServer } from './tests/setup/msw-server';
+
 // Mock Next.js router
 jest.mock('next/router', () => ({
   useRouter() {
@@ -108,3 +116,6 @@ beforeAll(() => {
 afterAll(() => {
   console.warn = originalWarn;
 });
+
+// Setup MSW for all tests
+setupMSWServer();
