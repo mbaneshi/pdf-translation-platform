@@ -40,7 +40,8 @@ services:
   # FastAPI Backend
   api:
     build: ./backend
-    # No host port; Traefik routes traffic
+    ports:
+      - "8000:8000"  # Expose API on localhost:8000
     environment:
       - DATABASE_URL=postgresql://user:password@db/pdftr
       - REDIS_URL=redis://cache:6379/0
