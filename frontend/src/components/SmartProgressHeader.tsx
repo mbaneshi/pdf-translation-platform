@@ -108,7 +108,7 @@ const ControlButton = styled.button<{ variant?: 'primary' | 'secondary' }>`
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
-    background: ${props => props.variant === 'primary' ? props.theme.colors.primary}dd : props.theme.colors.surface};
+    background: ${props => props.variant === 'primary' ? `${props.theme.colors.primary}dd` : props.theme.colors.surface};
   }
 
   &:disabled {
@@ -133,7 +133,7 @@ const ProgressBarContainer = styled.div`
 
 const ProgressBar = styled(motion.div)<{ percentage: number }>`
   height: 100%;
-  background: linear-gradient(90deg, ${props => props.theme.colors.primary}, ${props => props.theme.colors.primary}dd);
+  background: linear-gradient(90deg, ${props => props.theme.colors.primary}, ${props => `${props.theme.colors.primary}dd`});
   border-radius: ${props => props.theme.borderRadius.sm};
   position: relative;
 
@@ -191,8 +191,8 @@ const ETADisplay = styled.div`
 `;
 
 const ErrorMessage = styled.div`
-  background: ${props => props.theme.colors.error}10;
-  border: 1px solid ${props => props.theme.colors.error}40;
+  background: ${props => `${props.theme.colors.error}10`};
+  border: 1px solid ${props => `${props.theme.colors.error}40`};
   border-radius: ${props => props.theme.borderRadius.md};
   padding: ${props => props.theme.spacing.md};
   color: ${props => props.theme.colors.error};

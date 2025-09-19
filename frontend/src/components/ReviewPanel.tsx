@@ -4,6 +4,17 @@ import React, { useState, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Theme type extension for styled-components
+declare module 'styled-components' {
+  export interface DefaultTheme {
+    colors: any;
+    spacing: any;
+    borderRadius: any;
+    shadows: any;
+    typography: any;
+  }
+}
+
 interface PageData {
   id: number;
   page_number: number;
