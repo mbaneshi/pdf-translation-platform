@@ -220,25 +220,72 @@ class SampleTranslation(Base):
 
 class FormatPreservation(Base):
     __tablename__ = "format_preservation"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     page_id = Column(Integer, ForeignKey("pdf_pages.id"), index=True)
-    
+
     # Layout information
     layout_type = Column(String(50), default='text')  # text, table, column, image
     layout_data = Column(JSON, default=dict)
-    
+
     # Original formatting
     fonts = Column(JSON, default=list)
     colors = Column(JSON, default=list)
     spacing = Column(JSON, default=dict)
-    
+
     # Preservation status
     preserved = Column(Boolean, default=False)
     preservation_method = Column(String(50))
     preservation_data = Column(JSON, default=dict)
-    
+
     created_at = Column(DateTime, default=datetime.utcnow)
-    
+
     # Relationships
     page = relationship("PDFPage", back_populates="format_preservation")
+
+class UserSettings(Base):
+    __tablename__ = "user_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(100), unique=True, index=True)  # Can be session ID for now
+
+    # API Configuration
+    openai_api_key = Column(Text)
+    default_model = Column(String(50), default='gpt-4o')
+
+    # Custom Prompts
+    system_prompt = Column(Text)
+    translation_prompt = Column(Text)
+    style_prompt = Column(Text)
+
+    # UI Preferences
+    theme = Column(String(20), default='light')
+    view_mode = Column(String(20), default='single')  # single, side-by-side
+
+    # Translation Settings
+    glossary_terms = Column(JSON, default=dict)
+    sample_translations = Column(JSON, default=list)
+    quality_level = Column(String(20), default='standard')
+    preserve_formatting = Column(Boolean, default=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class TranslationGlossary(Base):
+    __tablename__ = "translation_glossary"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(100), index=True)
+
+    # Term data
+    source_term = Column(String(200), nullable=False)
+    target_term = Column(String(200), nullable=False)
+    context = Column(Text)
+    category = Column(String(50))  # academic, philosophical, technical
+
+    # Usage tracking
+    usage_count = Column(Integer, default=0)
+    last_used = Column(DateTime)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
