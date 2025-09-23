@@ -44,7 +44,7 @@ class User(Base):
     documents = relationship("PDFDocument", back_populates="user")
     glossary_entries = relationship("Glossary", back_populates="user")
     prompt_templates = relationship("PromptTemplate", back_populates="user")
-    translation_jobs = relationship("TranslationJob", back_populates="user")
+    # translation_jobs relationship moved to app.models.models
     
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', full_name='{self.full_name}')>"
@@ -113,62 +113,13 @@ class PromptTemplate(Base):
     
     # Relationships
     user = relationship("User", back_populates="prompt_templates")
-    translation_jobs = relationship("TranslationJob", back_populates="prompt_template")
+    # translation_jobs relationship moved to app.models.models
     
     def __repr__(self):
         return f"<PromptTemplate(id={self.id}, name='{self.name}', category='{self.category}')>"
 
-class TranslationJob(Base):
-    """Enhanced translation job model with user and template tracking"""
-    __tablename__ = "translation_jobs"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    uuid = Column(String(36), unique=True, default=generate_uuid, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    document_id = Column(Integer, ForeignKey("pdf_documents.id"), nullable=False)
-    prompt_template_id = Column(Integer, ForeignKey("prompt_templates.id"), nullable=True)
-    
-    # Job information
-    job_name = Column(String(255), nullable=True)
-    status = Column(String(50), default="pending")  # pending, processing, completed, failed
-    
-    # Translation settings
-    translation_settings = Column(Text, nullable=True)  # JSON string
-    glossary_applied = Column(Boolean, default=False)
-    consistency_check_enabled = Column(Boolean, default=True)
-    
-    # Progress tracking
-    total_chunks = Column(Integer, default=0)
-    completed_chunks = Column(Integer, default=0)
-    failed_chunks = Column(Integer, default=0)
-    
-    # Cost and usage tracking
-    total_cost = Column(Float, default=0.0)
-    total_tokens_in = Column(Integer, default=0)
-    total_tokens_out = Column(Integer, default=0)
-    
-    # Quality metrics
-    average_quality_score = Column(Float, default=0.0)
-    consistency_score = Column(Float, default=0.0)
-    user_satisfaction_rating = Column(Integer, nullable=True)
-    
-    # Error handling
-    error_message = Column(Text, nullable=True)
-    retry_count = Column(Integer, default=0)
-    
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    started_at = Column(DateTime, nullable=True)
-    completed_at = Column(DateTime, nullable=True)
-    
-    # Relationships
-    user = relationship("User", back_populates="translation_jobs")
-    document = relationship("PDFDocument", back_populates="translation_jobs")
-    prompt_template = relationship("PromptTemplate", back_populates="translation_jobs")
-    
-    def __repr__(self):
-        return f"<TranslationJob(id={self.id}, status='{self.status}', user_id={self.user_id})>"
+# TranslationJob model moved to app.models.models to avoid duplication
+# Import it from there: from app.models.models import TranslationJob
 
 class UserSession(Base):
     """User session model for session management"""
