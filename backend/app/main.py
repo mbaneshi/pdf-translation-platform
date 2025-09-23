@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.database import engine, Base
 from app.api.endpoints import documents, enhanced_documents
 from app.api.endpoints import pages as pages_endpoints
-from app.api.endpoints import monitoring, auth, glossary
+from app.api.endpoints import monitoring, auth, glossary, collab
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
 @asynccontextmanager
@@ -42,6 +42,7 @@ app.include_router(documents.router, prefix="/api/documents", tags=["documents"]
 app.include_router(enhanced_documents.router, prefix="/api/enhanced", tags=["enhanced"])
 app.include_router(pages_endpoints.router, prefix="/api/pages", tags=["pages"])
 app.include_router(monitoring.router, prefix="/api/monitoring", tags=["monitoring"])
+app.include_router(collab.router, prefix="/api/collab", tags=["collaboration"])
 
 @app.get("/")
 async def root():

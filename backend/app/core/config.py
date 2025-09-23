@@ -45,6 +45,17 @@ class Settings(BaseSettings):
     # CORS settings
     CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "http://localhost:3000,https://pdf.edcopo.info,https://apipdf.edcopo.info")
     
+    # Translation Provider settings
+    TRANSLATION_PROVIDER: str = os.getenv("TRANSLATION_PROVIDER", "openai")
+    
+    # OpenAI-compatible provider settings
+    OPENAI_COMPATIBLE_URL: str = os.getenv("OPENAI_COMPATIBLE_URL", "")
+    OPENAI_COMPATIBLE_API_KEY: str = os.getenv("OPENAI_COMPATIBLE_API_KEY", "")
+    OPENAI_COMPATIBLE_MODEL: str = os.getenv("OPENAI_COMPATIBLE_MODEL", "gpt-3.5-turbo")
+    
+    # Collaboration settings
+    COLLAB_ENABLED: bool = os.getenv("COLLAB_ENABLED", "true").lower() in {"1", "true", "yes"}
+    
     class Config:
         case_sensitive = True
 

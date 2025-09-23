@@ -606,3 +606,189 @@ async def export_document_markdown(
         parts.append(f"\n\n# Page {p.page_number}\n\n{(p.translated_text or '').strip()}")
     md = "".join(parts).strip() or "# Empty translation"
     return {"document_id": document_id, "format": "markdown", "content": md}
+
+
+@router.post("/documents/{document_id}/pages/{page_number}/translate")
+async def translate_page_lazy(
+    document_id: int,
+    page_number: int,
+    provider: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Start lazy translation for a specific page"""
+    try:
+        # Get the page
+        page = db.query(PDFPage).filter(
+            PDFPage.document_id == document_id,
+            PDFPage.page_number == page_number
+        ).first()
+        
+        if not page:
+            raise HTTPException(404, f"Page {page_number} not found in document {document_id}")
+        
+        # Check if already translated
+        if page.translation_status == "completed":
+            return {
+                "job_id": f"page_{page.id}_already_completed",
+                "status": "completed",
+                "message": "Page already translated"
+            }
+        
+        # Update status to processing
+        page.translation_status = "processing"
+        db.commit()
+        
+        # Start translation job
+        job_id = f"page_{page.id}_{int(datetime.utcnow().timestamp())}"
+        
+        # For now, we'll do synchronous translation
+        # In production, this should be queued as a background task
+        try:
+            translation_service = TranslationService()
+            translated_text = translation_service.translate_text(
+                page.original_text, 
+                "en", 
+                "fa", 
+                provider
+            )
+            
+            page.translated_text = translated_text
+            page.translation_status = "completed"
+            page.translation_model = translation_service.provider_router.get(provider).name
+            page.cost_estimate = translation_service.estimate_cost(page.original_text, "en", "fa", provider)
+            
+            db.commit()
+            
+            return {
+                "job_id": job_id,
+                "status": "completed",
+                "message": "Translation completed successfully"
+            }
+            
+        except Exception as e:
+            page.translation_status = "failed"
+            db.commit()
+            raise HTTPException(500, f"Translation failed: {str(e)}")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in lazy translation: {e}")
+        raise HTTPException(500, "Internal server error")
+
+
+@router.get("/documents/{document_id}/pages/{page_number}")
+async def get_page_with_translation(
+    document_id: int,
+    page_number: int,
+    db: Session = Depends(get_db)
+):
+    """Get page details including translation status and provider info"""
+    try:
+        page = db.query(PDFPage).filter(
+            PDFPage.document_id == document_id,
+            PDFPage.page_number == page_number
+        ).first()
+        
+        if not page:
+            raise HTTPException(404, f"Page {page_number} not found in document {document_id}")
+        
+        return {
+            "page_id": page.id,
+            "page_number": page.page_number,
+            "document_id": page.document_id,
+            "status": page.translation_status,
+            "source_text": page.original_text,
+            "translated_text": page.translated_text,
+            "provider": getattr(page, 'translation_model', 'unknown'),
+            "cost_estimate": getattr(page, 'cost_estimate', 0.0),
+            "translation_time": getattr(page, 'translation_time', None),
+            "quality_score": getattr(page, 'quality_score', None),
+            "tokens_used": getattr(page, 'tokens_used', None),
+            "created_at": page.created_at.isoformat() if page.created_at else None,
+            "updated_at": page.updated_at.isoformat() if page.updated_at else None
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting page details: {e}")
+        raise HTTPException(500, "Internal server error")
+
+
+@router.get("/documents/{document_id}/pages/{page_number}/suggestions")
+async def get_page_suggestions(
+    document_id: int,
+    page_number: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get suggestions for a specific page"""
+    try:
+        page = db.query(PDFPage).filter(
+            PDFPage.document_id == document_id,
+            PDFPage.page_number == page_number
+        ).first()
+        
+        if not page:
+            raise HTTPException(404, f"Page {page_number} not found in document {document_id}")
+        
+        # For now, return empty suggestions
+        # In the future, this will query the suggestions table
+        return {
+            "page_id": page.id,
+            "page_number": page.page_number,
+            "suggestions": [],
+            "total_count": 0
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting page suggestions: {e}")
+        raise HTTPException(500, "Internal server error")
+
+
+@router.post("/suggestions/{suggestion_id}/accept")
+async def accept_suggestion(
+    suggestion_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Accept a suggestion and apply it to the page"""
+    try:
+        # For now, return a placeholder response
+        # In the future, this will update the page with the accepted suggestion
+        return {
+            "suggestion_id": suggestion_id,
+            "status": "accepted",
+            "message": "Suggestion accepted successfully",
+            "updated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error accepting suggestion: {e}")
+        raise HTTPException(500, "Internal server error")
+
+
+@router.post("/suggestions/{suggestion_id}/reject")
+async def reject_suggestion(
+    suggestion_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Reject a suggestion"""
+    try:
+        # For now, return a placeholder response
+        # In the future, this will mark the suggestion as rejected
+        return {
+            "suggestion_id": suggestion_id,
+            "status": "rejected",
+            "message": "Suggestion rejected",
+            "updated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error rejecting suggestion: {e}")
+        raise HTTPException(500, "Internal server error")
