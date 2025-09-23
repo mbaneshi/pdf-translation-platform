@@ -14,13 +14,11 @@ from app.core.database import get_db
 from app.core.config import settings
 from app.models.models import PDFDocument, PDFPage, SemanticStructure, SampleTranslation, TranslationJob
 from app.models.user_models import User
-from app.services.pdf_service import PDFService
-from app.services.pdf_service import PDFService as EnhancedPDFService
-from app.services.semantic_analyzer import SemanticAnalyzer
-from app.services.translation_service import TranslationService
-from app.workers.celery_worker import process_document_translation
-from app.api.endpoints.auth import get_current_user
-import aiofiles
+from app.services.suggestions_service import SuggestionsService
+from app.services.glossary_service import GlossaryEnforcementService
+from app.services.quality_service import QualityScoringService
+from app.services.comments_service import CommentsService
+from app.services.presence_service import PresenceService
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -792,3 +790,527 @@ async def reject_suggestion(
     except Exception as e:
         logger.error(f"Error rejecting suggestion: {e}")
         raise HTTPException(500, "Internal server error")
+
+
+@router.post("/documents/{document_id}/pages/{page_number}/enforce-glossary")
+async def enforce_glossary_on_page(
+    document_id: int,
+    page_number: int,
+    strict_mode: bool = False,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Enforce glossary terms on a specific page"""
+    try:
+        page = db.query(PDFPage).filter(
+            PDFPage.document_id == document_id,
+            PDFPage.page_number == page_number
+        ).first()
+        
+        if not page:
+            raise HTTPException(404, f"Page {page_number} not found in document {document_id}")
+        
+        glossary_service = GlossaryEnforcementService(db)
+        result = await glossary_service.enforce_glossary_on_page(
+            page.id, current_user.id, strict_mode
+        )
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error enforcing glossary on page: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/documents/{document_id}/enforce-glossary")
+async def batch_enforce_glossary(
+    document_id: int,
+    page_numbers: Optional[List[int]] = None,
+    strict_mode: bool = False,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Enforce glossary terms on multiple pages"""
+    try:
+        glossary_service = GlossaryEnforcementService(db)
+        result = await glossary_service.batch_enforce_glossary(
+            document_id, current_user.id, page_numbers, strict_mode
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error batch enforcing glossary: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/documents/{document_id}/pages/{page_number}/quality-score")
+async def get_page_quality_score(
+    document_id: int,
+    page_number: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get quality score for a specific page"""
+    try:
+        page = db.query(PDFPage).filter(
+            PDFPage.document_id == document_id,
+            PDFPage.page_number == page_number
+        ).first()
+        
+        if not page:
+            raise HTTPException(404, f"Page {page_number} not found in document {document_id}")
+        
+        quality_service = QualityScoringService(db)
+        result = await quality_service.score_page(page.id, current_user.id)
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting page quality score: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/documents/{document_id}/quality-score")
+async def get_document_quality_score(
+    document_id: int,
+    page_numbers: Optional[List[int]] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get quality scores for all pages in a document"""
+    try:
+        quality_service = QualityScoringService(db)
+        result = await quality_service.score_document(
+            document_id, current_user.id, page_numbers
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error getting document quality score: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/documents/{document_id}/quality-trends")
+async def get_quality_trends(
+    document_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get quality trends over time for a document"""
+    try:
+        quality_service = QualityScoringService(db)
+        result = await quality_service.get_quality_trends(document_id, current_user.id)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error getting quality trends: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/glossary/statistics")
+async def get_glossary_statistics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get statistics about user's glossary"""
+    try:
+        glossary_service = GlossaryEnforcementService(db)
+        result = await glossary_service.get_glossary_statistics(current_user.id)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error getting glossary statistics: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/glossary/suggest-terms")
+async def suggest_glossary_terms(
+    text: str,
+    min_frequency: int = 2,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Suggest potential glossary terms from text"""
+    try:
+        glossary_service = GlossaryEnforcementService(db)
+        suggestions = await glossary_service.suggest_glossary_terms(
+            text, current_user.id, min_frequency
+        )
+        
+        return {
+            "suggestions": suggestions,
+            "total_count": len(suggestions),
+            "min_frequency": min_frequency
+        }
+        
+    except Exception as e:
+        logger.error(f"Error suggesting glossary terms: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# Comments endpoints
+@router.post("/documents/{document_id}/pages/{page_number}/comments")
+async def create_comment(
+    document_id: int,
+    page_number: int,
+    comment_data: Dict[str, Any],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new comment on a page"""
+    try:
+        page = db.query(PDFPage).filter(
+            PDFPage.document_id == document_id,
+            PDFPage.page_number == page_number
+        ).first()
+        
+        if not page:
+            raise HTTPException(404, f"Page {page_number} not found in document {document_id}")
+        
+        comments_service = CommentsService(db)
+        comment = await comments_service.create_comment(
+            page.id,
+            comment_data.get("segment_id", ""),
+            comment_data.get("text", ""),
+            current_user.id,
+            comment_data.get("parent_comment_id")
+        )
+        
+        return comment
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating comment: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/documents/{document_id}/pages/{page_number}/comments")
+async def get_page_comments(
+    document_id: int,
+    page_number: int,
+    segment_id: Optional[str] = None,
+    include_replies: bool = True,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all comments for a page"""
+    try:
+        page = db.query(PDFPage).filter(
+            PDFPage.document_id == document_id,
+            PDFPage.page_number == page_number
+        ).first()
+        
+        if not page:
+            raise HTTPException(404, f"Page {page_number} not found in document {document_id}")
+        
+        comments_service = CommentsService(db)
+        comments = await comments_service.get_comments_for_page(
+            page.id, segment_id, include_replies
+        )
+        
+        return {
+            "page_id": page.id,
+            "page_number": page_number,
+            "comments": comments,
+            "total_count": len(comments)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting page comments: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.put("/comments/{comment_id}")
+async def update_comment(
+    comment_id: str,
+    comment_data: Dict[str, Any],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update a comment"""
+    try:
+        comments_service = CommentsService(db)
+        result = await comments_service.update_comment(
+            comment_id,
+            comment_data.get("text", ""),
+            current_user.id
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error updating comment: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.delete("/comments/{comment_id}")
+async def delete_comment(
+    comment_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a comment"""
+    try:
+        comments_service = CommentsService(db)
+        result = await comments_service.delete_comment(comment_id, current_user.id)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error deleting comment: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/comments/{comment_id}/resolve")
+async def resolve_comment(
+    comment_id: str,
+    resolution_data: Dict[str, Any],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Mark a comment as resolved"""
+    try:
+        comments_service = CommentsService(db)
+        result = await comments_service.resolve_comment(
+            comment_id,
+            current_user.id,
+            resolution_data.get("resolution_note")
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error resolving comment: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/comments/{comment_id}/reactions")
+async def add_reaction(
+    comment_id: str,
+    reaction_data: Dict[str, Any],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Add a reaction to a comment"""
+    try:
+        comments_service = CommentsService(db)
+        result = await comments_service.add_reaction(
+            comment_id,
+            reaction_data.get("reaction", ""),
+            current_user.id
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error adding reaction: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.delete("/comments/{comment_id}/reactions/{reaction}")
+async def remove_reaction(
+    comment_id: str,
+    reaction: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Remove a reaction from a comment"""
+    try:
+        comments_service = CommentsService(db)
+        result = await comments_service.remove_reaction(
+            comment_id,
+            reaction,
+            current_user.id
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error removing reaction: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# Presence endpoints
+@router.get("/documents/{document_id}/pages/{page_number}/presence")
+async def get_page_presence(
+    document_id: int,
+    page_number: int
+):
+    """Get current presence information for a page"""
+    try:
+        presence_service = PresenceService()
+        presence = await presence_service.get_page_presence(page_number)
+        
+        return presence
+        
+    except Exception as e:
+        logger.error(f"Error getting page presence: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/documents/{document_id}/pages/{page_number}/presence/join")
+async def join_page(
+    document_id: int,
+    page_number: int,
+    user_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    """User joins a page"""
+    try:
+        presence_service = PresenceService()
+        result = await presence_service.join_page(
+            page_number,
+            current_user.id,
+            user_data
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error joining page: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/documents/{document_id}/pages/{page_number}/presence/leave")
+async def leave_page(
+    document_id: int,
+    page_number: int,
+    current_user: User = Depends(get_current_user)
+):
+    """User leaves a page"""
+    try:
+        presence_service = PresenceService()
+        result = await presence_service.leave_page(page_number, current_user.id)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error leaving page: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/documents/{document_id}/pages/{page_number}/presence/cursor")
+async def update_cursor_position(
+    document_id: int,
+    page_number: int,
+    cursor_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    """Update user's cursor position"""
+    try:
+        presence_service = PresenceService()
+        result = await presence_service.update_cursor_position(
+            page_number,
+            current_user.id,
+            cursor_data
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error updating cursor position: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/documents/{document_id}/pages/{page_number}/presence/selection")
+async def update_selection_range(
+    document_id: int,
+    page_number: int,
+    selection_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    """Update user's text selection range"""
+    try:
+        presence_service = PresenceService()
+        result = await presence_service.update_selection_range(
+            page_number,
+            current_user.id,
+            selection_data
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error updating selection range: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/documents/{document_id}/pages/{page_number}/locks")
+async def acquire_soft_lock(
+    document_id: int,
+    page_number: int,
+    lock_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    """Acquire a soft lock on a resource"""
+    try:
+        presence_service = PresenceService()
+        result = await presence_service.acquire_soft_lock(
+            page_number,
+            current_user.id,
+            lock_data.get("resource", ""),
+            lock_data.get("lock_type", "edit")
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error acquiring soft lock: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.delete("/documents/{document_id}/pages/{page_number}/locks/{resource}")
+async def release_soft_lock(
+    document_id: int,
+    page_number: int,
+    resource: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Release a soft lock on a resource"""
+    try:
+        presence_service = PresenceService()
+        result = await presence_service.release_soft_lock(
+            page_number,
+            current_user.id,
+            resource
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error releasing soft lock: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/documents/{document_id}/pages/{page_number}/locks/{resource}/renew")
+async def renew_soft_lock(
+    document_id: int,
+    page_number: int,
+    resource: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Renew a soft lock to extend its expiration"""
+    try:
+        presence_service = PresenceService()
+        result = await presence_service.renew_soft_lock(
+            page_number,
+            current_user.id,
+            resource
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error renewing soft lock: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
