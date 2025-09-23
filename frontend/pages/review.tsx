@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useTheme } from '../contexts/ThemeContext';
+import { useDocumentState } from '../contexts/DocumentContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '../lib/api';
 import { Edit2, Save, Wand2, RotateCcw, Settings, Copy, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -19,7 +22,9 @@ interface UserSettings {
 const ReviewPage: React.FC = () => {
   const { theme } = useTheme();
   const router = useRouter();
-  const { documentId, page, preview } = router.query as { documentId?: string; page?: string; preview?: string };
+  const { documentId } = useDocumentState();
+  const { page, preview } = router.query as { page?: string; preview?: string };
+  const qc = useQueryClient();
 
   const [originalText, setOriginalText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
@@ -44,34 +49,56 @@ const ReviewPage: React.FC = () => {
         if (sample) {
           const parsed = JSON.parse(sample);
           setTranslatedText(parsed?.translated_text || '');
-          setOriginalText(parsed?.original_text || 'Original text would be loaded from the document.');
+          setOriginalText(parsed?.original_text || '');
         }
       } catch {}
-    } else {
-      // Mock data for demonstration
-      setOriginalText(`Philosophy has always been concerned with the fundamental questions of existence, knowledge, and morality. The ancient philosophers laid the groundwork for our understanding of these concepts, and their work continues to influence modern thought.
-
-In contemporary philosophical discourse, we see a synthesis of classical wisdom and modern scientific understanding. This integration has led to new perspectives on age-old questions about the nature of reality, consciousness, and human purpose.
-
-The relationship between mind and matter remains one of the most compelling puzzles in philosophy. Various theories have been proposed, from dualism to materialism, each offering different insights into the nature of human experience.`);
-
-      setTranslatedText(`فلسفه همواره به پرسش‌های بنیادین هستی، دانش و اخلاق پرداخته است. فیلسوفان باستان پایه‌های درک ما از این مفاهیم را بنا نهادند و کار آنها همچنان بر اندیشه مدرن تأثیرگذار است.
-
-در گفتمان فلسفی معاصر، شاهد ترکیبی از حکمت کلاسیک و درک علمی مدرن هستیم. این یکپارچگی به دیدگاه‌های جدیدی نسبت به پرسش‌های کهن درباره ماهیت واقعیت، آگاهی و هدف انسانی منجر شده است.
-
-رابطه میان ذهن و ماده همچنان یکی از جذاب‌ترین معماهای فلسفه باقی می‌ماند. نظریه‌های مختلفی ارائه شده است، از دوگرایی تا مادیگرایی، که هر کدام بینش‌های متفاوتی از ماهیت تجربه انسانی عرضه می‌کنند.`);
     }
   }, [preview]);
 
-  const saveChanges = async () => {
-    setSaving(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  // Resolve page_id by looking up document pages
+  const pageNumber = page ? parseInt(page, 10) : undefined;
+  const pagesQuery = useQuery({
+    queryKey: ['pages', documentId],
+    queryFn: () => api.getDocumentPages(documentId!),
+    enabled: !!documentId && !preview,
+  });
+
+  const pageId = useMemo(() => {
+    if (!Array.isArray(pagesQuery.data) || !pageNumber) return undefined;
+    const match = pagesQuery.data.find((p) => p.page_number === pageNumber);
+    return match?.id;
+  }, [pagesQuery.data, pageNumber]);
+
+  const detailQuery = useQuery({
+    queryKey: ['page-detail', pageId],
+    queryFn: () => api.getPageDetail(pageId!),
+    enabled: !!pageId && !preview,
+  });
+
+  useEffect(() => {
+    const data: any = detailQuery.data as any;
+    if (data) {
+      const orig = (data?.blocks || []).map((b: any) => b.text).join('\n\n');
+      setOriginalText(orig || '');
+      const initial = data?.blocks?.[0]?.segments?.[0]?.translated_text || '';
+      if (!translatedText) setTranslatedText(initial);
+    }
+  }, [detailQuery.data]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => api.updatePageTranslation(pageId!, translatedText),
+    onSuccess: () => {
       toast.success('Translation saved successfully!');
       setIsEditing(false);
-    } catch (error) {
-      toast.error('Failed to save changes');
+      qc.invalidateQueries({ queryKey: ['page-detail', pageId] });
+    },
+    onError: () => toast.error('Failed to save changes'),
+  });
+  const saveChanges = async () => {
+    if (!pageId) return;
+    setSaving(true);
+    try {
+      await saveMutation.mutateAsync();
     } finally {
       setSaving(false);
     }
@@ -144,18 +171,32 @@ The relationship between mind and matter remains one of the most compelling puzz
               Document {documentId} • Page {page || '1'}
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.back()}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-            >
-              Back to Documents
-            </button>
-            <button
-              onClick={() => setShowPromptAdjustment(!showPromptAdjustment)}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 text-sm"
-            >
-              <Settings size={16} /> Adjust
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => router.back()}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                >
+                  Back to Documents
+                </button>
+                <button
+                  onClick={async () => { if (pageId) { await api.approvePage(pageId); toast.success('Approved'); } }}
+                  disabled={!pageId}
+                  className="px-4 py-2 border border-green-300 text-green-700 rounded-lg hover:bg-green-50 text-sm"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={async () => { if (pageId) { await api.rejectPage(pageId); toast.success('Rejected'); } }}
+                  disabled={!pageId}
+                  className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 text-sm"
+                >
+                  Reject
+                </button>
+                <button
+                  onClick={() => setShowPromptAdjustment(!showPromptAdjustment)}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 text-sm"
+                >
+                  <Settings size={16} /> Adjust
             </button>
           </div>
         </div>

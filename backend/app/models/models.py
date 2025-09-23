@@ -49,12 +49,16 @@ class PDFDocument(Base):
     document_metadata = Column(JSON, default=dict)
     analysis_completed = Column(Boolean, default=False)
     
+    # User relationship
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     pages = relationship("PDFPage", back_populates="document", cascade="all, delete-orphan")
     translation_jobs = relationship("TranslationJob", back_populates="document", cascade="all, delete-orphan")
+    user = relationship("User", back_populates="documents")
     sample_translations = relationship("SampleTranslation", back_populates="document", cascade="all, delete-orphan")
 
 class PDFPage(Base):
@@ -161,6 +165,8 @@ class TranslationJob(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     document_id = Column(Integer, ForeignKey("pdf_documents.id"), index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    prompt_template_id = Column(Integer, ForeignKey("prompt_templates.id"), nullable=True)
     celery_task_id = Column(String(255), unique=True)
     
     # Job details
@@ -189,6 +195,8 @@ class TranslationJob(Base):
     
     # Relationships
     document = relationship("PDFDocument", back_populates="translation_jobs")
+    user = relationship("User", back_populates="translation_jobs")
+    prompt_template = relationship("PromptTemplate", back_populates="translation_jobs")
 
 class SampleTranslation(Base):
     __tablename__ = "sample_translations"
