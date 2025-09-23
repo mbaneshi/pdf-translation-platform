@@ -3,7 +3,9 @@ import FileUpload from '../components/FileUpload';
 import DocumentViewer from '../components/DocumentViewer';
 import EnhancedDocumentViewer from '../components/EnhancedDocumentViewer';
 import OnboardingModal from '../components/Onboarding/OnboardingModal';
+import AuthModal from '../components/Auth/AuthModal';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import { PDFIcon, TranslationIcon } from '../components/Icons';
 import { Toaster } from 'react-hot-toast';
 import type { UploadResponse } from '../types/api';
@@ -13,6 +15,8 @@ const Home: React.FC = () => {
   const { documentId, setDocumentId, useEnhancedMode, setUseEnhancedMode, setUploadMeta } = useDocumentState();
   const [currentDocument, setCurrentDocument] = useState<UploadResponse | null>(null);
   const { theme } = useTheme();
+  const { isAuthenticated, user, logout } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleUploadSuccess = (result: UploadResponse) => {
     setCurrentDocument(result);
@@ -53,6 +57,11 @@ const Home: React.FC = () => {
       />
 
       <OnboardingModal />
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+        initialMode="login"
+      />
 
       <header className={`${theme.cardBg} backdrop-blur-md shadow-lg border-b border-white/20 rounded-xl p-4`}> 
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
@@ -81,6 +90,28 @@ const Home: React.FC = () => {
               >
                 {useEnhancedMode ? 'Enhanced Mode' : 'Legacy Mode'}
               </button>
+              
+              {isAuthenticated ? (
+                <div className="flex items-center space-x-3">
+                  <span className={`text-sm ${theme.textSecondary}`}>
+                    Welcome, {user?.email}
+                  </span>
+                  <button
+                    onClick={logout}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm font-medium transition-all"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-all"
+                >
+                  Login
+                </button>
+              )}
+              
               {currentDocument && (
                 <button
                   onClick={() => {
