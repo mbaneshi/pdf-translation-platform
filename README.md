@@ -1,10 +1,6 @@
 # Advanced PDF Translation Platform
-![Uploading 13 essence node n8n.png…]()
-![mern-optimized](https://github.com/user-attachments/assets/0f1608e7-62c8-4acb-aaf4-20b20a2169cf)
-![git](https://github.com/user-attachments/assets/9118c173-6220-4966-8fe6-2bb0bd4785fa)
-<img width="1024" height="1024" alt="ChatGPT Image Sep 21, 2025, 11_47_13 PM" src="https://github.com/user-attachments/assets/83806b00-ec60-4838-b699-92976248379c" />
-![pdf-translator](https://github.com/user-attachments/assets/52bced61-a56a-41af-ab3b-aedf1014d7fa)
 
+![pdf-translator](https://github.com/user-attachments/assets/1b446415-5a40-4498-914d-283059f71b45)
 
 A comprehensive production-ready system for translating PDF documents from English to Persian using OpenAI's GPT models.
 
