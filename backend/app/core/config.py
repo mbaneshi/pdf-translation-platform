@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
     SMTP_FROM_EMAIL: str = os.getenv("SMTP_FROM_EMAIL", "noreply@pdf.edcopo.info")
     
+    # CORS settings
+    CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "http://localhost:3000,https://pdf.edcopo.info,https://apipdf.edcopo.info")
+    
     class Config:
         case_sensitive = True
 
