@@ -69,59 +69,37 @@
           - generic [ref=e79] [cursor=pointer]: Settings
     - main [ref=e80]:
       - generic [ref=e81]:
-        - generic [ref=e85]:
-          - button [ref=e86] [cursor=pointer]:
-            - img [ref=e87] [cursor=pointer]
-          - generic [ref=e89]:
+        - generic [ref=e84]:
+          - generic [ref=e85]:
+            - img [ref=e87]
             - generic [ref=e90]:
-              - heading "Welcome Back" [level=2] [ref=e91]
-              - paragraph [ref=e92]: Sign in to your account
-            - generic [ref=e93]:
-              - generic [ref=e94]:
-                - generic [ref=e95]: Email
-                - textbox "Email" [ref=e96]: nonexistent@example.com
-              - generic [ref=e97]:
-                - generic [ref=e98]: Password
-                - generic [ref=e99]:
-                  - textbox "Password" [ref=e100]: wrongpassword
-                  - button [ref=e101] [cursor=pointer]:
-                    - img [ref=e102] [cursor=pointer]
-              - button "Forgot password?" [ref=e106] [cursor=pointer]
-              - button "Sign In" [ref=e107] [cursor=pointer]
-            - paragraph [ref=e109]:
-              - text: Don't have an account?
-              - button "Sign up" [ref=e110] [cursor=pointer]
-        - generic [ref=e113]:
-          - generic [ref=e114]:
-            - img [ref=e116]
-            - generic [ref=e119]:
-              - heading "PDF Translation Platform" [level=1] [ref=e120]
-              - paragraph [ref=e121]: AI-powered English to Persian translation
-          - generic [ref=e122]:
-            - button "Enhanced Mode" [ref=e123] [cursor=pointer]
-            - button "Login" [ref=e124] [cursor=pointer]
-        - generic [ref=e126]:
-          - generic [ref=e127]:
-            - img [ref=e129]
-            - generic [ref=e135]:
-              - heading "Upload Your PDF Document" [level=2] [ref=e136]
-              - paragraph [ref=e137]: Select a PDF to begin translation from English to Persian.
-          - generic [ref=e139] [cursor=pointer]:
-            - button "Choose File" [ref=e140]
-            - generic [ref=e141] [cursor=pointer]:
-              - img [ref=e143] [cursor=pointer]
-              - generic [ref=e146] [cursor=pointer]:
-                - paragraph [ref=e147] [cursor=pointer]: Drag & drop your PDF file
-                - paragraph [ref=e148] [cursor=pointer]: or click to browse files
-                - generic [ref=e149] [cursor=pointer]:
-                  - img [ref=e150] [cursor=pointer]
+              - heading "PDF Translation Platform" [level=1] [ref=e91]
+              - paragraph [ref=e92]: AI-powered English to Persian translation
+          - generic [ref=e93]:
+            - button "Enhanced Mode" [ref=e94] [cursor=pointer]
+            - button "Login" [ref=e95] [cursor=pointer]
+        - generic [ref=e97]:
+          - generic [ref=e98]:
+            - img [ref=e100]
+            - generic [ref=e106]:
+              - heading "Upload Your PDF Document" [level=2] [ref=e107]
+              - paragraph [ref=e108]: Select a PDF to begin translation from English to Persian.
+          - generic [ref=e110] [cursor=pointer]:
+            - button "Choose File" [ref=e111]
+            - generic [ref=e112] [cursor=pointer]:
+              - img [ref=e114] [cursor=pointer]
+              - generic [ref=e117] [cursor=pointer]:
+                - paragraph [ref=e118] [cursor=pointer]: Drag & drop your PDF file
+                - paragraph [ref=e119] [cursor=pointer]: or click to browse files
+                - generic [ref=e120] [cursor=pointer]:
+                  - img [ref=e121] [cursor=pointer]
                   - text: Enhanced Mode - Advanced features enabled
-                - generic [ref=e152] [cursor=pointer]:
-                  - generic [ref=e153] [cursor=pointer]:
-                    - img [ref=e154] [cursor=pointer]
-                    - generic [ref=e156] [cursor=pointer]: PDF format only
-                  - generic [ref=e157] [cursor=pointer]:
-                    - img [ref=e158] [cursor=pointer]
-                    - generic [ref=e160] [cursor=pointer]: Max 100MB
-  - alert [ref=e163]
+                - generic [ref=e123] [cursor=pointer]:
+                  - generic [ref=e124] [cursor=pointer]:
+                    - img [ref=e125] [cursor=pointer]
+                    - generic [ref=e127] [cursor=pointer]: PDF format only
+                  - generic [ref=e128] [cursor=pointer]:
+                    - img [ref=e129] [cursor=pointer]
+                    - generic [ref=e131] [cursor=pointer]: Max 100MB
+  - alert [ref=e134]
 ```

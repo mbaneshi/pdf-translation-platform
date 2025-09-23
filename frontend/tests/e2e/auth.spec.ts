@@ -4,6 +4,12 @@ test.describe('User Authentication', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the home page before each test
     await page.goto('/');
+    
+    // Close onboarding modal if it appears
+    const gotItButton = page.locator('button:has-text("Got it")');
+    if (await gotItButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await gotItButton.click();
+    }
   });
 
   test('should display login form on home page', async ({ page }) => {
@@ -16,8 +22,8 @@ test.describe('User Authentication', () => {
     await expect(page.locator('button[type="submit"]')).toBeVisible();
     
     // Check for login form labels
-    await expect(page.locator('text=Email')).toBeVisible();
-    await expect(page.locator('text=Password')).toBeVisible();
+    await expect(page.locator('label:has-text("Email")')).toBeVisible();
+    await expect(page.locator('label:has-text("Password")')).toBeVisible();
   });
 
   test('should show validation errors for empty form submission', async ({ page }) => {

@@ -14,90 +14,119 @@
             - /url: /
             - img [ref=e15] [cursor=pointer]
             - generic [ref=e17] [cursor=pointer]: Home
-          - link "Documents" [ref=e18] [cursor=pointer]:
-            - /url: /documents
+          - link "Translate" [ref=e18] [cursor=pointer]:
+            - /url: /translate
             - img [ref=e19] [cursor=pointer]
-            - generic [ref=e21] [cursor=pointer]: Documents
-          - link "Translations" [ref=e22] [cursor=pointer]:
-            - /url: /translations
+            - generic [ref=e21] [cursor=pointer]: Translate
+          - link "Glossary" [ref=e22] [cursor=pointer]:
+            - /url: /glossary
             - img [ref=e23] [cursor=pointer]
-            - generic [ref=e25] [cursor=pointer]: Translations
-          - link "History" [ref=e26] [cursor=pointer]:
-            - /url: /history
+            - generic [ref=e25] [cursor=pointer]: Glossary
+          - link "Documents" [ref=e26] [cursor=pointer]:
+            - /url: /documents
             - img [ref=e27] [cursor=pointer]
-            - generic [ref=e29] [cursor=pointer]: History
-          - link "Settings" [ref=e30] [cursor=pointer]:
-            - /url: /settings
+            - generic [ref=e29] [cursor=pointer]: Documents
+          - link "Translations" [ref=e30] [cursor=pointer]:
+            - /url: /translations
             - img [ref=e31] [cursor=pointer]
-            - generic [ref=e34] [cursor=pointer]: Settings
-        - generic [ref=e35]:
-          - button "Change theme" [ref=e37] [cursor=pointer]:
-            - img [ref=e38] [cursor=pointer]
-          - button [ref=e41] [cursor=pointer]:
-            - img [ref=e43] [cursor=pointer]
-            - img [ref=e45] [cursor=pointer]
-    - complementary [ref=e47]:
-      - generic [ref=e49]: Navigation
-      - navigation [ref=e50]:
-        - link "Home" [ref=e51] [cursor=pointer]:
+            - generic [ref=e33] [cursor=pointer]: Translations
+          - link "History" [ref=e34] [cursor=pointer]:
+            - /url: /history
+            - img [ref=e35] [cursor=pointer]
+            - generic [ref=e37] [cursor=pointer]: History
+          - link "Settings" [ref=e38] [cursor=pointer]:
+            - /url: /settings
+            - img [ref=e39] [cursor=pointer]
+            - generic [ref=e42] [cursor=pointer]: Settings
+        - generic [ref=e43]:
+          - button "Change theme" [ref=e45] [cursor=pointer]:
+            - img [ref=e46] [cursor=pointer]
+          - button [ref=e49] [cursor=pointer]:
+            - img [ref=e51] [cursor=pointer]
+            - img [ref=e53] [cursor=pointer]
+    - complementary [ref=e55]:
+      - generic [ref=e57]: Navigation
+      - navigation [ref=e58]:
+        - link "Home" [ref=e59] [cursor=pointer]:
           - /url: /
-          - img [ref=e52] [cursor=pointer]
-          - generic [ref=e54] [cursor=pointer]: Home
-        - link "Documents" [ref=e55] [cursor=pointer]:
-          - /url: /documents
-          - img [ref=e56] [cursor=pointer]
-          - generic [ref=e58] [cursor=pointer]: Documents
-        - link "Translations" [ref=e59] [cursor=pointer]:
-          - /url: /translations
           - img [ref=e60] [cursor=pointer]
-          - generic [ref=e62] [cursor=pointer]: Translations
-        - link "History" [ref=e63] [cursor=pointer]:
-          - /url: /history
+          - generic [ref=e62] [cursor=pointer]: Home
+        - link "Documents" [ref=e63] [cursor=pointer]:
+          - /url: /documents
           - img [ref=e64] [cursor=pointer]
-          - generic [ref=e66] [cursor=pointer]: History
-        - link "Settings" [ref=e67] [cursor=pointer]:
-          - /url: /settings
+          - generic [ref=e66] [cursor=pointer]: Documents
+        - link "Translations" [ref=e67] [cursor=pointer]:
+          - /url: /translations
           - img [ref=e68] [cursor=pointer]
-          - generic [ref=e71] [cursor=pointer]: Settings
-    - main [ref=e72]:
-      - generic [ref=e73]:
-        - generic [ref=e76]:
-          - heading "Welcome to PDF Translator" [level=2] [ref=e77]
-          - paragraph [ref=e78]: Upload a PDF, translate pages with AI, and review results. Use the sidebar to access Documents, Translations, History, and Settings.
-          - list [ref=e79]:
-            - listitem [ref=e80]: Drag & drop a PDF or click to upload
-            - listitem [ref=e81]: Start translation and track progress
-            - listitem [ref=e82]: Switch themes in the navbar menu
-          - button "Got it" [ref=e84] [cursor=pointer]
-        - generic [ref=e87]:
-          - generic [ref=e88]:
-            - img [ref=e90]
+          - generic [ref=e70] [cursor=pointer]: Translations
+        - link "History" [ref=e71] [cursor=pointer]:
+          - /url: /history
+          - img [ref=e72] [cursor=pointer]
+          - generic [ref=e74] [cursor=pointer]: History
+        - link "Settings" [ref=e75] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=e76] [cursor=pointer]
+          - generic [ref=e79] [cursor=pointer]: Settings
+    - main [ref=e80]:
+      - generic [ref=e81]:
+        - generic [ref=e85]:
+          - button [ref=e86] [cursor=pointer]:
+            - img [ref=e87] [cursor=pointer]
+          - generic [ref=e89]:
+            - generic [ref=e90]:
+              - heading "Create Account" [level=2] [ref=e91]
+              - paragraph [ref=e92]: Sign up to get started
             - generic [ref=e93]:
-              - heading "PDF Translation Platform" [level=1] [ref=e94]
-              - paragraph [ref=e95]: AI-powered English to Persian translation
-          - button "Enhanced Mode" [ref=e97] [cursor=pointer]
-        - generic [ref=e99]:
-          - generic [ref=e100]:
-            - img [ref=e102]
-            - generic [ref=e108]:
-              - heading "Upload Your PDF Document" [level=2] [ref=e109]
-              - paragraph [ref=e110]: Select a PDF to begin translation from English to Persian.
-          - generic [ref=e112] [cursor=pointer]:
-            - button "Choose File" [ref=e113]
-            - generic [ref=e114] [cursor=pointer]:
-              - img [ref=e116] [cursor=pointer]
-              - generic [ref=e119] [cursor=pointer]:
-                - paragraph [ref=e120] [cursor=pointer]: Drag & drop your PDF file
-                - paragraph [ref=e121] [cursor=pointer]: or click to browse files
-                - generic [ref=e122] [cursor=pointer]:
-                  - img [ref=e123] [cursor=pointer]
+              - generic [ref=e94]:
+                - generic [ref=e95]: Email
+                - textbox "Email" [ref=e96]: testuser1758641160690@example.com
+              - generic [ref=e97]:
+                - generic [ref=e98]: Password
+                - generic [ref=e99]:
+                  - textbox "Password" [ref=e100]: TestPassword123!
+                  - button [ref=e101] [cursor=pointer]:
+                    - img [ref=e102] [cursor=pointer]
+              - generic [ref=e105]:
+                - generic [ref=e106]: Confirm Password
+                - generic [ref=e107]:
+                  - textbox "Confirm Password" [ref=e108]: TestPassword123!
+                  - button [ref=e109] [cursor=pointer]:
+                    - img [ref=e110] [cursor=pointer]
+              - button "Create Account" [ref=e113] [cursor=pointer]
+            - paragraph [ref=e115]:
+              - text: Already have an account?
+              - button "Sign in" [ref=e116] [cursor=pointer]
+        - generic [ref=e119]:
+          - generic [ref=e120]:
+            - img [ref=e122]
+            - generic [ref=e125]:
+              - heading "PDF Translation Platform" [level=1] [ref=e126]
+              - paragraph [ref=e127]: AI-powered English to Persian translation
+          - generic [ref=e128]:
+            - button "Enhanced Mode" [ref=e129] [cursor=pointer]
+            - button "Login" [ref=e130] [cursor=pointer]
+        - generic [ref=e132]:
+          - generic [ref=e133]:
+            - img [ref=e135]
+            - generic [ref=e141]:
+              - heading "Upload Your PDF Document" [level=2] [ref=e142]
+              - paragraph [ref=e143]: Select a PDF to begin translation from English to Persian.
+          - generic [ref=e145] [cursor=pointer]:
+            - button "Choose File" [ref=e146]
+            - generic [ref=e147] [cursor=pointer]:
+              - img [ref=e149] [cursor=pointer]
+              - generic [ref=e152] [cursor=pointer]:
+                - paragraph [ref=e153] [cursor=pointer]: Drag & drop your PDF file
+                - paragraph [ref=e154] [cursor=pointer]: or click to browse files
+                - generic [ref=e155] [cursor=pointer]:
+                  - img [ref=e156] [cursor=pointer]
                   - text: Enhanced Mode - Advanced features enabled
-                - generic [ref=e125] [cursor=pointer]:
-                  - generic [ref=e126] [cursor=pointer]:
-                    - img [ref=e127] [cursor=pointer]
-                    - generic [ref=e129] [cursor=pointer]: PDF format only
-                  - generic [ref=e130] [cursor=pointer]:
-                    - img [ref=e131] [cursor=pointer]
-                    - generic [ref=e133] [cursor=pointer]: Max 100MB
-  - alert [ref=e136]
+                - generic [ref=e158] [cursor=pointer]:
+                  - generic [ref=e159] [cursor=pointer]:
+                    - img [ref=e160] [cursor=pointer]
+                    - generic [ref=e162] [cursor=pointer]: PDF format only
+                  - generic [ref=e163] [cursor=pointer]:
+                    - img [ref=e164] [cursor=pointer]
+                    - generic [ref=e166] [cursor=pointer]: Max 100MB
+  - alert [ref=e169]
 ```
