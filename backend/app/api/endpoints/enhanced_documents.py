@@ -13,11 +13,13 @@ from datetime import datetime
 from app.core.database import get_db
 from app.core.config import settings
 from app.models.models import PDFDocument, PDFPage, SemanticStructure, SampleTranslation, TranslationJob
+from app.models.user_models import User
 from app.services.pdf_service import PDFService
 from app.services.pdf_service import PDFService as EnhancedPDFService
 from app.services.semantic_analyzer import SemanticAnalyzer
 from app.services.translation_service import TranslationService
 from app.workers.celery_worker import process_document_translation
+from app.api.endpoints.auth import get_current_user
 import aiofiles
 
 # Configure logging
@@ -28,7 +30,8 @@ router = APIRouter()
 @router.post("/upload-enhanced", response_model=dict)
 async def upload_pdf_enhanced(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Upload PDF document with enhanced processing and layout preservation"""
     
@@ -295,7 +298,8 @@ async def get_semantic_structure(
 async def translate_sample_page(
     document_id: int,
     page_number: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Translate a sample page for testing"""
     document = db.query(PDFDocument).filter(PDFDocument.id == document_id).first()
@@ -504,7 +508,8 @@ async def start_gradual_translation(
     document_id: int,
     strategy: str = "semantic",
     selected_pages: Optional[List[int]] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Start gradual translation with user control"""
     document = db.query(PDFDocument).filter(PDFDocument.id == document_id).first()

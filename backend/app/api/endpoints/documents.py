@@ -10,9 +10,11 @@ from datetime import datetime
 from app.core.database import get_db
 from app.core.config import settings
 from app.models.models import PDFDocument, PDFPage
+from app.models.user_models import User
 from app.services.pdf_service import PDFService
 from app.services.translation_service import TranslationService
 from app.workers.celery_worker import process_document_translation
+from app.api.endpoints.auth import get_current_user
 import aiofiles
 
 # Configure logging
@@ -23,7 +25,8 @@ router = APIRouter()
 @router.post("/upload", response_model=dict)
 async def upload_pdf(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Upload PDF document with comprehensive error handling and logging"""
     
@@ -185,7 +188,11 @@ async def get_document_pages(document_id: int, db: Session = Depends(get_db)):
     } for page in pages]
 
 @router.post("/{document_id}/translate")
-async def start_translation(document_id: int, db: Session = Depends(get_db)):
+async def start_translation(
+    document_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Start translation process for document"""
     document = db.query(PDFDocument).filter(PDFDocument.id == document_id).first()
     if not document:
@@ -200,7 +207,8 @@ async def start_translation(document_id: int, db: Session = Depends(get_db)):
 async def mark_test_page(
     document_id: int, 
     page_number: int, 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Mark page as test page and translate it"""
     try:

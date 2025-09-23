@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Optional
 
 from app.core.database import get_db
 from app.models.models import PDFPage, SemanticStructure
+from app.models.user_models import User
+from app.api.endpoints.auth import get_current_user
 
 router = APIRouter()
 
@@ -45,7 +47,12 @@ def get_page_detail(page_id: int, db: Session = Depends(get_db)):
 
 
 @router.patch("/{page_id}", response_model=dict)
-def update_page_translation(page_id: int, body: Dict[str, Any], db: Session = Depends(get_db)):
+def update_page_translation(
+    page_id: int, 
+    body: Dict[str, Any], 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     page = db.query(PDFPage).filter(PDFPage.id == page_id).first()
     if not page:
         raise HTTPException(status_code=404, detail="Page not found")
@@ -74,7 +81,11 @@ def update_page_translation(page_id: int, body: Dict[str, Any], db: Session = De
 
 
 @router.post("/{page_id}/approve", response_model=dict)
-def approve_page(page_id: int, db: Session = Depends(get_db)):
+def approve_page(
+    page_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     page = db.query(PDFPage).filter(PDFPage.id == page_id).first()
     if not page:
         raise HTTPException(status_code=404, detail="Page not found")
@@ -85,7 +96,11 @@ def approve_page(page_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{page_id}/reject", response_model=dict)
-def reject_page(page_id: int, db: Session = Depends(get_db)):
+def reject_page(
+    page_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     page = db.query(PDFPage).filter(PDFPage.id == page_id).first()
     if not page:
         raise HTTPException(status_code=404, detail="Page not found")
