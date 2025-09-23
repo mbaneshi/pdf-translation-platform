@@ -162,6 +162,7 @@ async def get_document(document_id: int, db: Session = Depends(get_db)):
         "status": document.status,
         "total_pages": document.total_pages,
         "total_characters": document.total_characters,
+        "file_size_bytes": getattr(document, 'file_size_bytes', 0),
         "created_at": document.created_at
     }
 
@@ -175,6 +176,7 @@ async def get_document_pages(document_id: int, db: Session = Depends(get_db)):
         "page_number": page.page_number,
         "char_count": page.char_count,
         "translation_status": page.translation_status,
+        "translated_text": page.translated_text,
         "tokens_in": getattr(page, 'tokens_in', 0),
         "tokens_out": getattr(page, 'tokens_out', 0),
         "cost_estimate": getattr(page, 'cost_estimate', 0.0),
