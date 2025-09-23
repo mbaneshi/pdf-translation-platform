@@ -78,7 +78,7 @@ def approve_page(page_id: int, db: Session = Depends(get_db)):
     page = db.query(PDFPage).filter(PDFPage.id == page_id).first()
     if not page:
         raise HTTPException(status_code=404, detail="Page not found")
-    page.translation_status = "approved"
+    page.translation_status = "completed"
     db.add(page)
     db.commit()
     return {"message": "approved", "page_id": page.id}
@@ -89,7 +89,7 @@ def reject_page(page_id: int, db: Session = Depends(get_db)):
     page = db.query(PDFPage).filter(PDFPage.id == page_id).first()
     if not page:
         raise HTTPException(status_code=404, detail="Page not found")
-    page.translation_status = "rejected"
+    page.translation_status = "failed"
     db.add(page)
     db.commit()
     return {"message": "rejected", "page_id": page.id}
