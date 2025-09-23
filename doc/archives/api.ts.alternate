@@ -1,0 +1,140 @@
+import { 
+  ApiClient, 
+  UploadResponse, 
+  Document, 
+  Page, 
+  TranslationResult,
+  ApiError 
+} from '@/types';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+class ApiErrorImpl extends Error implements ApiError {
+  constructor(
+    message: string,
+    public status?: number,
+    public code?: string,
+    public details?: any
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+const handleApiError = async (response: Response): Promise<never> => {
+  let errorMessage = 'An unexpected error occurred';
+  let errorCode: string | undefined;
+  let errorDetails: any;
+
+  try {
+    const errorData = await response.json();
+    errorMessage = errorData.detail || errorData.message || errorMessage;
+    errorCode = errorData.code;
+    errorDetails = errorData;
+  } catch {
+    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+  }
+
+  throw new ApiErrorImpl(errorMessage, response.status, errorCode, errorDetails);
+};
+
+const apiRequest = async <T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> => {
+  const url = `${API_BASE_URL}${endpoint}`;
+  
+  const defaultOptions: RequestInit = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  };
+
+  const response = await fetch(url, { ...defaultOptions, ...options });
+
+  if (!response.ok) {
+    await handleApiError(response);
+  }
+
+  // Handle empty responses
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  return {} as T;
+};
+
+export const api: ApiClient = {
+  uploadDocument: async (file: File): Promise<UploadResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    return apiRequest<UploadResponse>('/api/documents/upload', {
+      method: 'POST',
+      headers: {}, // Remove Content-Type to let browser set it with boundary
+      body: formData,
+    });
+  },
+
+  // Enhanced upload that hits the enhanced backend route
+  // Used when the UI is in Enhanced Mode
+  // Note: Keep headers empty so the browser sets multipart/form-data boundary
+  uploadEnhanced: async (file: File): Promise<UploadResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return apiRequest<UploadResponse>('/api/enhanced/upload-enhanced', {
+      method: 'POST',
+      headers: {},
+      body: formData,
+    });
+  },
+
+  getDocument: async (documentId: number): Promise<Document> => {
+    return apiRequest<Document>(`/api/documents/${documentId}`);
+  },
+
+  getDocumentPages: async (documentId: number): Promise<Page[]> => {
+    return apiRequest<Page[]>(`/api/documents/${documentId}/pages`);
+  },
+
+  startTranslation: async (documentId: number): Promise<{ message: string; task_id: string }> => {
+    return apiRequest<{ message: string; task_id: string }>(`/api/documents/${documentId}/translate`, {
+      method: 'POST',
+    });
+  },
+
+  // Enhanced gradual translation starter
+  startGradualTranslation: async (documentId: number): Promise<{ message: string; task_id: string }> => {
+    return apiRequest<{ message: string; task_id: string }>(`/api/enhanced/gradual-translate/${documentId}`, {
+      method: 'POST',
+    });
+  },
+
+  translateTestPage: async (documentId: number, pageNumber: number): Promise<TranslationResult> => {
+    return apiRequest<TranslationResult>(`/api/documents/${documentId}/pages/${pageNumber}/test`, {
+      method: 'POST',
+    });
+  },
+
+  // Enhanced sample translate for a single page
+  translateSample: async (documentId: number, pageNumber: number): Promise<TranslationResult> => {
+    return apiRequest<TranslationResult>(`/api/enhanced/translate-sample/${documentId}/page/${pageNumber}`, {
+      method: 'POST',
+    });
+  },
+
+  // Progress for a document (uses enhanced endpoint which returns rollups even if no job exists)
+  getProgress: async (documentId: number): Promise<any> => {
+    return apiRequest<any>(`/api/enhanced/translation-progress/${documentId}`);
+  },
+
+  // Export concatenated Markdown of translations
+  exportMarkdown: async (documentId: number): Promise<{ document_id: number; format: string; content: string }> => {
+    return apiRequest<{ document_id: number; format: string; content: string }>(`/api/enhanced/export/${documentId}`);
+  },
+};
+
+export { ApiErrorImpl as ApiError };

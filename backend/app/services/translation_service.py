@@ -2,7 +2,6 @@ from openai import OpenAI
 import time
 from typing import Optional, Dict, List
 from app.core.config import settings
-import tqdm
 from sqlalchemy.orm import Session
 from app.models.models import PDFPage
 import logging
