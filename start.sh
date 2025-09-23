@@ -13,6 +13,14 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
+# Check if traefik-proxy network exists (for production deployment)
+if docker network ls | grep -q "traefik-proxy"; then
+    echo "✅ Traefik proxy network found"
+else
+    echo "⚠️  Traefik proxy network not found - using local development mode"
+    echo "   For production deployment, ensure traefik-proxy network exists"
+fi
+
 # Check if OpenAI API key is set
 if grep -q "your_openai_api_key_here" .env; then
     echo "⚠️  Please set your OpenAI API key in .env file"
@@ -20,13 +28,13 @@ if grep -q "your_openai_api_key_here" .env; then
 fi
 
 echo "📦 Starting infrastructure services..."
-docker-compose up -d db cache
+docker compose up -d db cache
 
 echo "⏳ Waiting for services to be healthy..."
 sleep 10
 
 echo "🔧 Starting application services..."
-docker-compose up -d api worker monitor
+docker compose up -d api worker monitor
 
 echo "✅ Services started successfully!"
 echo ""
@@ -39,4 +47,4 @@ echo "📱 To start the frontend:"
 echo "   cd frontend && npm install && npm run dev"
 echo ""
 echo "📊 To view logs:"
-echo "   docker-compose logs -f"
+echo "   docker compose logs -f"
