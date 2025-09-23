@@ -74,14 +74,17 @@ Persian Translation:
         
         for attempt in range(max_retries):
             try:
-                response = self.client.completions.create(
+                response = self.client.chat.completions.create(
                     model=self.model,
-                    prompt=self.PERSIAN_TRANSLATION_PROMPT.format(text=text),
+                    messages=[
+                        {"role": "system", "content": "You are an expert translator specializing in academic and philosophical texts from English to Persian (Farsi)."},
+                        {"role": "user", "content": f"Translate the following text to Persian, maintaining academic tone and precision:\n\n{text}"}
+                    ],
                     max_tokens=4000,
                     temperature=0.1
                 )
                 
-                translated_text = response.choices[0].text.strip()
+                translated_text = response.choices[0].message.content.strip()
                 
                 # Process Persian text for proper RTL and shaping
                 processed_text = self.persian_processor.format_persian_text(translated_text)
