@@ -184,7 +184,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
     } catch (error: any) {
       toast.error('Failed to export Markdown: ' + (error.message || 'Unknown error'));
     }
-  }, [documentId, document]);
+  }, [documentId, documentData]);
 
   if (loading) {
     return (
@@ -202,7 +202,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
     );
   }
 
-  if (!document) {
+  if (!documentData) {
     return (
       <div className="text-center py-16">
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
