@@ -8,7 +8,7 @@ from typing import Optional, List
 import logging
 
 from app.core.database import get_db
-from app.services.glossary_service import GlossaryService
+from app.services.glossary_service import GlossaryEnforcementService
 from app.models.user_models import User
 from app.api.endpoints.auth import get_current_user
 
@@ -87,7 +87,7 @@ async def create_glossary_entry(
 ):
     """Create a new glossary entry"""
     try:
-        glossary_service = GlossaryService()
+        glossary_service = GlossaryEnforcementService()
         result = glossary_service.create_glossary_entry(
             user_id=current_user.id,
             term=entry_data.term,
@@ -121,7 +121,7 @@ async def get_user_glossary(
 ):
     """Get all glossary entries for the current user"""
     try:
-        glossary_service = GlossaryService()
+        glossary_service = GlossaryEnforcementService()
         result = glossary_service.get_user_glossary(current_user.id, db)
         
         if not result["success"]:
@@ -154,7 +154,7 @@ async def search_glossary_entries(
 ):
     """Search glossary entries"""
     try:
-        glossary_service = GlossaryService()
+        glossary_service = GlossaryEnforcementService()
         result = glossary_service.search_glossary_entries(
             user_id=current_user.id,
             search_term=search_term,
@@ -193,7 +193,7 @@ async def get_glossary_by_category(
 ):
     """Get glossary entries by category"""
     try:
-        glossary_service = GlossaryService()
+        glossary_service = GlossaryEnforcementService()
         result = glossary_service.get_glossary_by_category(
             user_id=current_user.id,
             category=category,
@@ -231,7 +231,7 @@ async def update_glossary_entry(
 ):
     """Update a glossary entry"""
     try:
-        glossary_service = GlossaryService()
+        glossary_service = GlossaryEnforcementService()
         result = glossary_service.update_glossary_entry(
             entry_id=entry_id,
             user_id=current_user.id,
@@ -267,7 +267,7 @@ async def delete_glossary_entry(
 ):
     """Delete a glossary entry"""
     try:
-        glossary_service = GlossaryService()
+        glossary_service = GlossaryEnforcementService()
         result = glossary_service.delete_glossary_entry(
             entry_id=entry_id,
             user_id=current_user.id,
@@ -299,7 +299,7 @@ async def extract_terms_from_document(
 ):
     """Extract terms from document text"""
     try:
-        glossary_service = GlossaryService()
+        glossary_service = GlossaryEnforcementService()
         result = glossary_service.extract_terms_from_document(
             user_id=current_user.id,
             document_text=request.document_text,
@@ -331,7 +331,7 @@ async def suggest_translations(
 ):
     """Suggest translations for terms"""
     try:
-        glossary_service = GlossaryService()
+        glossary_service = GlossaryEnforcementService()
         result = glossary_service.suggest_translations(terms, db)
         
         if not result["success"]:
@@ -359,7 +359,7 @@ async def check_translation_consistency(
 ):
     """Check translation consistency using user's glossary"""
     try:
-        glossary_service = GlossaryService()
+        glossary_service = GlossaryEnforcementService()
         result = glossary_service.check_translation_consistency(
             user_id=current_user.id,
             document_text=request.document_text,
@@ -392,7 +392,7 @@ async def apply_glossary_to_translation(
 ):
     """Apply glossary to translation for consistency"""
     try:
-        glossary_service = GlossaryService()
+        glossary_service = GlossaryEnforcementService()
         result = glossary_service.apply_glossary_to_translation(
             user_id=current_user.id,
             original_text=original_text,
@@ -425,7 +425,7 @@ async def export_glossary(
 ):
     """Export glossary in specified format"""
     try:
-        glossary_service = GlossaryService()
+        glossary_service = GlossaryEnforcementService()
         result = glossary_service.export_glossary(
             user_id=current_user.id,
             format=request.format,
@@ -458,7 +458,7 @@ async def import_glossary(
 ):
     """Import glossary entries from data"""
     try:
-        glossary_service = GlossaryService()
+        glossary_service = GlossaryEnforcementService()
         result = glossary_service.import_glossary(
             user_id=current_user.id,
             data=request.data,
@@ -489,7 +489,7 @@ async def generate_consistency_report(
 ):
     """Generate consistency report for user's glossary"""
     try:
-        glossary_service = GlossaryService()
+        glossary_service = GlossaryEnforcementService()
         result = glossary_service.generate_consistency_report(current_user.id, db)
         
         if not result["success"]:

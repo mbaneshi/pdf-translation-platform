@@ -4,7 +4,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useDocumentState } from '../contexts/DocumentContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import { Edit2, Save, Wand2, RotateCcw, Settings, Copy, Check } from 'lucide-react';
+import { Edit2, Save, Wand, RotateCcw, Settings, Copy, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface UserSettings {
@@ -224,7 +224,7 @@ const ReviewPage: React.FC = () => {
                   disabled={isSaving || !adjustmentPrompt.trim()}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
                 >
-                  <Wand2 size={16} />
+                  <Wand size={16} />
                   {isSaving ? 'Adjusting...' : 'Apply Adjustment'}
                 </button>
                 <button

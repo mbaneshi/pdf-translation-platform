@@ -147,7 +147,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
       <div className="mt-6 text-center">
         <p className={`${theme.textSecondary}`}>
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <button
             type="button"
             onClick={onSwitchToRegister}

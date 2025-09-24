@@ -7,7 +7,7 @@ from datetime import datetime
 import logging
 
 from .snapshot_store import SnapshotStore
-from .models import CollabMessage, UserInfo
+from .models import CollaborationMessage, PresenceData
 
 logger = logging.getLogger(__name__)
 

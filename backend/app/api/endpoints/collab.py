@@ -5,7 +5,7 @@ import json
 import logging
 from datetime import datetime
 
-from app.services.collab.room_manager import Rooms
+from app.services.collab.room_manager import RoomManager
 from app.services.collab.crdt_manager import CRDTStateManager
 from app.services.presence_service import PresenceService
 from app.services.comments_service import CommentsService
@@ -16,7 +16,7 @@ from app.models.user_models import User
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-rooms = Rooms()
+rooms = RoomManager()
 crdt_manager = CRDTStateManager()
 presence_service = PresenceService()
 

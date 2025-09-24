@@ -22,7 +22,7 @@ export default function MiniMap({
   documentId 
 }: MiniMapProps) {
   const [searchTerm, setSearchTerm] = useState('')
-  const { theme } = useTheme()
+  const { currentTheme } = useTheme()
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -60,7 +60,7 @@ export default function MiniMap({
   )
 
   return (
-    <div className={`h-full flex flex-col ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
+    <div className={`h-full flex flex-col ${currentTheme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">

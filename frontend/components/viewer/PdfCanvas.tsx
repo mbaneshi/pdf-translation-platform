@@ -19,7 +19,7 @@ export default function PdfCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { theme } = useTheme()
+  const { currentTheme } = useTheme()
 
   useEffect(() => {
     const loadPdfPage = async () => {
@@ -51,16 +51,16 @@ export default function PdfCanvas({
         ctx.clearRect(0, 0, scaledWidth, scaledHeight)
 
         // Draw placeholder content
-        ctx.fillStyle = theme === 'dark' ? '#374151' : '#ffffff'
+        ctx.fillStyle = currentTheme === 'dark' ? '#374151' : '#ffffff'
         ctx.fillRect(0, 0, scaledWidth, scaledHeight)
 
         // Draw border
-        ctx.strokeStyle = theme === 'dark' ? '#6b7280' : '#d1d5db'
+        ctx.strokeStyle = currentTheme === 'dark' ? '#6b7280' : '#d1d5db'
         ctx.lineWidth = 1
         ctx.strokeRect(0, 0, scaledWidth, scaledHeight)
 
         // Draw placeholder text
-        ctx.fillStyle = theme === 'dark' ? '#9ca3af' : '#6b7280'
+        ctx.fillStyle = currentTheme === 'dark' ? '#9ca3af' : '#6b7280'
         ctx.font = `${16 * zoom}px Arial`
         ctx.textAlign = 'center'
         ctx.fillText(
@@ -83,7 +83,7 @@ export default function PdfCanvas({
         )
 
         // Draw page number indicator
-        ctx.fillStyle = theme === 'dark' ? '#3b82f6' : '#2563eb'
+        ctx.fillStyle = currentTheme === 'dark' ? '#3b82f6' : '#2563eb'
         ctx.font = `${14 * zoom}px Arial`
         ctx.fillText(
           `Page ${pageNumber}`,
@@ -102,7 +102,7 @@ export default function PdfCanvas({
     }
 
     loadPdfPage()
-  }, [documentId, pageNumber, zoom, theme, onPageRender])
+  }, [documentId, pageNumber, zoom, currentTheme, onPageRender])
 
   if (error) {
     return (

@@ -24,9 +24,9 @@ export function usePageData(documentId: number, pageNumber: number) {
       return api.getPageWithTranslation(documentId, pageNumber)
     },
     enabled: !!documentId && !!pageNumber,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Refetch every 2 seconds if page is processing
-      return data?.status === 'processing' ? 2000 : false
+      return query.state.data?.status === 'processing' ? 2000 : false
     },
     staleTime: 1000, // Consider data stale after 1 second
     retry: 3,

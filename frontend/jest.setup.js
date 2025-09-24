@@ -1,5 +1,7 @@
-import '@testing-library/jest-dom';
-import 'jest-axe/extend-expect';
+# Frontend Test Setup
+# frontend/jest.setup.js
+
+import '@testing-library/jest-dom'
 
 // Mock Next.js router
 jest.mock('next/router', () => ({
@@ -21,44 +23,41 @@ jest.mock('next/router', () => ({
         emit: jest.fn(),
       },
       isFallback: false,
-    };
+    }
   },
-}));
+}))
 
-// Mock Next.js navigation
-jest.mock('next/navigation', () => ({
-  useRouter() {
-    return {
-      push: jest.fn(),
-      replace: jest.fn(),
-      prefetch: jest.fn(),
-      back: jest.fn(),
-      forward: jest.fn(),
-      refresh: jest.fn(),
-    };
+// Mock Next.js Image component
+jest.mock('next/image', () => ({
+  __esModule: true,
+  default: (props) => {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img {...props} />
   },
-  useSearchParams() {
-    return new URLSearchParams();
-  },
-  usePathname() {
-    return '/';
-  },
-}));
+}))
+
+// Mock environment variables
+process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8000'
 
 // Mock WebSocket
 global.WebSocket = class WebSocket {
-  constructor() {
-    this.readyState = 1;
-    this.CONNECTING = 0;
-    this.OPEN = 1;
-    this.CLOSING = 2;
-    this.CLOSED = 3;
+  constructor(url) {
+    this.url = url
+    this.readyState = 1
+    this.onopen = null
+    this.onclose = null
+    this.onmessage = null
+    this.onerror = null
   }
-  addEventListener() {}
-  removeEventListener() {}
-  send() {}
-  close() {}
-};
+  
+  send(data) {
+    // Mock send
+  }
+  
+  close() {
+    // Mock close
+  }
+}
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
@@ -66,7 +65,7 @@ global.IntersectionObserver = class IntersectionObserver {
   observe() {}
   disconnect() {}
   unobserve() {}
-};
+}
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
@@ -74,7 +73,7 @@ global.ResizeObserver = class ResizeObserver {
   observe() {}
   disconnect() {}
   unobserve() {}
-};
+}
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -89,42 +88,74 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
   })),
-});
+})
 
-// Mock window.getComputedStyle
-Object.defineProperty(window, 'getComputedStyle', {
-  value: () => ({
-    getPropertyValue: () => '',
-  }),
-});
+// Mock fetch
+global.fetch = jest.fn()
+
+// Mock File API
+global.File = class File {
+  constructor(chunks, filename, options = {}) {
+    this.name = filename
+    this.size = chunks.join('').length
+    this.type = options.type || 'text/plain'
+  }
+}
+
+// Mock FileReader
+global.FileReader = class FileReader {
+  constructor() {
+    this.readyState = 0
+    this.result = null
+    this.error = null
+    this.onload = null
+    this.onerror = null
+  }
+  
+  readAsText(file) {
+    setTimeout(() => {
+      this.result = 'mock file content'
+      this.readyState = 2
+      if (this.onload) this.onload({ target: this })
+    }, 0)
+  }
+  
+  readAsDataURL(file) {
+    setTimeout(() => {
+      this.result = 'data:text/plain;base64,bW9jayBmaWxlIGNvbnRlbnQ='
+      this.readyState = 2
+      if (this.onload) this.onload({ target: this })
+    }, 0)
+  }
+}
 
 // Suppress console warnings in tests
-const originalWarn = console.warn;
-const originalError = console.error;
+const originalWarn = console.warn
+const originalError = console.error
 
 beforeAll(() => {
   console.warn = (...args) => {
     if (
       typeof args[0] === 'string' &&
-      args[0].includes('Warning: ReactDOM.render is no longer supported')
+      args[0].includes('Warning: ReactDOM.render is deprecated')
     ) {
-      return;
+      return
     }
-    originalWarn.call(console, ...args);
-  };
-
+    originalWarn.call(console, ...args)
+  }
+  
   console.error = (...args) => {
     if (
       typeof args[0] === 'string' &&
       (args[0].includes('Warning:') || args[0].includes('Error: Could not parse'))
     ) {
-      return;
+      return
     }
-    originalError.call(console, ...args);
-  };
-});
+    originalError.call(console, ...args)
+  }
+})
 
 afterAll(() => {
-  console.warn = originalWarn;
-  console.error = originalError;
-});
+  console.warn = originalWarn
+  console.error = originalError
+})

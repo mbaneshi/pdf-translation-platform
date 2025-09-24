@@ -62,7 +62,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
           </div>
           <h2 className={`text-2xl font-bold ${theme.text} mb-2`}>Check Your Email</h2>
           <p className={`${theme.textSecondary} mb-6`}>
-            We've sent a password reset link to <strong>{email}</strong>
+            We&apos;ve sent a password reset link to <strong>{email}</strong>
           </p>
           <button
             onClick={onBackToLogin}
@@ -80,7 +80,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
       <div className="text-center mb-8">
         <h2 className={`text-2xl font-bold ${theme.text} mb-2`}>Reset Password</h2>
         <p className={`${theme.textSecondary}`}>
-          Enter your email address and we'll send you a link to reset your password.
+          Enter your email address and we&apos;ll send you a link to reset your password.
         </p>
       </div>
 

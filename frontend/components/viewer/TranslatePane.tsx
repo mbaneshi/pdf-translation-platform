@@ -38,7 +38,7 @@ export default function TranslatePane({
   const [selectedSegment, setSelectedSegment] = useState<string | null>(null)
   const [showSuggestionPopover, setShowSuggestionPopover] = useState(false)
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 })
-  const { theme } = useTheme()
+  const { currentTheme } = useTheme()
 
   // Split text into segments (sentences)
   useEffect(() => {
@@ -107,7 +107,7 @@ export default function TranslatePane({
   }
 
   return (
-    <div className={`h-full flex flex-col ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
+    <div className={`h-full flex flex-col ${currentTheme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">

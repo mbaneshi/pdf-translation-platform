@@ -18,7 +18,8 @@ class SnapshotStore:
         self.storage_backend = storage_backend
         self.snapshots: Dict[str, Dict[str, Any]] = {}
         self.cleanup_task = None
-        self._start_cleanup_task()
+        # Don't start cleanup task during initialization to avoid event loop issues
+        # self._start_cleanup_task()
     
     def _start_cleanup_task(self):
         """Start background cleanup task for old snapshots"""

@@ -63,15 +63,13 @@ class GlossaryEnforcementService:
                 case_sensitive = entry.get("case_sensitive", True)
                 
                 # Create search pattern
+                pattern = re.escape(term)
                 if case_sensitive:
-                    pattern = re.escape(term)
-                else:
-                    pattern = re.escape(term)
-                    text_to_search = text.lower()
-                    term_to_search = term.lower()
-                else:
                     text_to_search = text
                     term_to_search = term
+                else:
+                    text_to_search = text.lower()
+                    term_to_search = term.lower()
                 
                 # Find all occurrences
                 if case_sensitive:

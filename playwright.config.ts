@@ -1,3 +1,6 @@
+# Playwright E2E Test Configuration
+# playwright.config.ts
+
 import { defineConfig, devices } from '@playwright/test';
 
 /**
@@ -5,9 +8,6 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests/e2e',
-  /* Global setup and teardown */
-  globalSetup: require.resolve('./tests/e2e/global-setup'),
-  globalTeardown: require.resolve('./tests/e2e/global-teardown'),
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -72,10 +72,16 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  webServer: [
+    {
+      command: 'cd backend && python -m uvicorn app.main:app --reload --port 8000',
+      port: 8000,
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: 'cd frontend && npm run dev',
+      port: 3000,
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
 });

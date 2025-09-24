@@ -32,7 +32,11 @@ export default function Toolbar({
 }: ToolbarProps) {
   const [showZoomMenu, setShowZoomMenu] = useState(false)
   const [showSplitMenu, setShowSplitMenu] = useState(false)
-  const { theme, toggleTheme } = useTheme()
+  const { currentTheme, changeTheme } = useTheme()
+  
+  const toggleTheme = () => {
+    changeTheme(currentTheme === 'dark' ? 'brand' : 'dark')
+  }
 
   const handleZoomIn = () => {
     onZoomChange(zoom + 0.25)
@@ -53,7 +57,7 @@ export default function Toolbar({
 
   return (
     <div className={`h-16 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 ${
-      theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+      currentTheme === 'dark' ? 'bg-gray-800' : 'bg-white'
     }`}>
       {/* Left Section */}
       <div className="flex items-center space-x-4">
@@ -206,7 +210,7 @@ export default function Toolbar({
           className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
           title="Toggle Theme"
         >
-          {theme === 'dark' ? (
+          {currentTheme === 'dark' ? (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>

@@ -101,7 +101,7 @@ const GlossaryEntryCard: React.FC<GlossaryEntryCardProps> = ({
       {entry.context && (
         <div className="mb-3">
           <p className={`text-sm ${theme.textSecondary} italic`}>
-            "{entry.context}"
+            &ldquo;{entry.context}&rdquo;
           </p>
         </div>
       )}

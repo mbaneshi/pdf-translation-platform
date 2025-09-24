@@ -52,7 +52,7 @@ export default function ReaderPage({ documentId, document }: ReaderPageProps) {
   // Handle translation
   const handleTranslatePage = async () => {
     try {
-      await translatePage.mutateAsync()
+      await translatePage.mutateAsync('openai') // Provide default provider
     } catch (error) {
       console.error('Translation failed:', error)
     }
@@ -123,12 +123,12 @@ export default function ReaderPage({ documentId, document }: ReaderPageProps) {
   }
 
   return (
-    <div className={`h-full flex ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
+    <div className="h-full flex bg-white dark:bg-gray-900">
       {/* Mini Map */}
       {showMiniMap && (
         <div className="w-64 border-r border-gray-200 dark:border-gray-700">
           <MiniMap
-            pages={Array.from({ length: document.total_pages }, (_, i) => ({
+            pages={Array.from({ length: document.totalPages }, (_, i) => ({
               pageNumber: i + 1,
               status: i + 1 === currentPage ? 'current' : 'pending'
             }))}
@@ -144,7 +144,7 @@ export default function ReaderPage({ documentId, document }: ReaderPageProps) {
         {/* Toolbar */}
         <Toolbar
           currentPage={currentPage}
-          totalPages={document.total_pages}
+          totalPages={document.totalPages}
           zoom={zoom}
           splitRatio={splitRatio}
           isTranslating={translatePage.isPending}
@@ -195,7 +195,7 @@ export default function ReaderPage({ documentId, document }: ReaderPageProps) {
 
         {/* Status Bar */}
         <div className="h-8 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex items-center px-4 text-sm text-gray-600 dark:text-gray-400">
-          <span>Page {currentPage} of {document.total_pages}</span>
+          <span>Page {currentPage} of {document.totalPages}</span>
           <span className="ml-4">Zoom: {Math.round(zoom * 100)}%</span>
           {isConnected && (
             <span className="ml-4 text-green-600">● Connected</span>

@@ -12,7 +12,6 @@ services:
     # Do not publish Postgres port on host; internal only
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d pdftr"]
       interval: 5s
@@ -82,14 +81,14 @@ services:
     build: 
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: https://apipdf.edcopo.info
-        NEXT_PUBLIC_APP_URL: https://pdf.edcopo.info
-    # No host port; Traefik routes traffic
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+        NEXT_PUBLIC_APP_URL: http://localhost:3000
+    ports:
+      - "3000:3000"
     environment:
       - NODE_ENV=production
-      # Both browser and server-side use dedicated API subdomain via Traefik
-      - NEXT_PUBLIC_API_URL=https://apipdf.edcopo.info
-      - NEXT_PUBLIC_APP_URL=https://pdf.edcopo.info
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
     depends_on:
       - api
     networks:

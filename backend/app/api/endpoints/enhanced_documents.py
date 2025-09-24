@@ -3,7 +3,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
 from sqlalchemy.orm import Session
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 import os
 import uuid
 import logging
@@ -12,6 +12,7 @@ from datetime import datetime
 
 from app.core.database import get_db
 from app.core.config import settings
+from app.api.endpoints.auth import get_current_user
 from app.models.models import PDFDocument, PDFPage, SemanticStructure, SampleTranslation, TranslationJob
 from app.models.user_models import User
 from app.services.suggestions_service import SuggestionsService
