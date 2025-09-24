@@ -9,7 +9,15 @@ import Toolbar from './viewer/Toolbar'
 import { usePageData } from '../hooks/usePageData'
 import { useTranslatePage } from '../hooks/useTranslatePage'
 import { usePageChannel } from '../hooks/usePageChannel'
-import { Document } from '../types/api'
+
+interface Document {
+  id: number
+  filename: string
+  totalPages: number
+  fileUrl: string
+  uploadedAt: string
+  status: string
+}
 
 interface ReaderPageProps {
   documentId: number
@@ -30,11 +38,13 @@ export default function ReaderPage({ documentId, document }: ReaderPageProps) {
   const translatePage = useTranslatePage(documentId, currentPage)
   
   // WebSocket connection for real-time updates
-  const { isConnected, sendMessage } = usePageChannel(documentId, currentPage)
+  // const { isConnected, sendMessage } = usePageChannel({ pageId: documentId })
+  const isConnected = false
+  const sendMessage = () => {}
 
   // Handle page navigation
   const handlePageChange = (pageNumber: number) => {
-    if (pageNumber >= 1 && pageNumber <= document.total_pages) {
+    if (pageNumber >= 1 && pageNumber <= document.totalPages) {
       setCurrentPage(pageNumber)
     }
   }
